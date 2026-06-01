@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 
 const AppContext = createContext();
 const SESSION_KEY = "audit_session";
@@ -35,7 +35,7 @@ export function AppProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    // Temporarily disable authentication check for debugging
+    // Authentication check disabled for troubleshooting
     // if (!authChecked) return;
     // if (typeof window === "undefined") return;
     // const onLoginPage = window.location.pathname === "/login";
@@ -83,7 +83,7 @@ export function AppProvider({ children }) {
     localStorage.setItem("fontSize", size);
   };
 
-  const t = (key) => {
+  const t = useCallback((key) => {
     const translations = {
       "app.name": { en: "AuditOps", fr: "AuditOps" },
       "nav.dashboard": { en: "Dashboard", fr: "Tableau de bord" },
@@ -94,28 +94,16 @@ export function AppProvider({ children }) {
       "nav.adminPanel": { en: "Admin", fr: "Administration" },
       "nav.manageAudits": { en: "Manage Audits", fr: "Gérer les audits" },
       "nav.manageAnnouncements": { en: "Announcements", fr: "Annonces" },
-      "nav.reviewIssues": {
-        en: "Review Issues",
-        fr: "Examiner les signalements",
-      },
+      "nav.reviewIssues": {en: "Review Issues",fr: "Examiner les signalements"},
       "nav.manageUsers": { en: "Manage Users", fr: "Gérer les utilisateurs" },
       "dashboard.title": { en: "Dashboard", fr: "Tableau de bord" },
       "dashboard.activeAudits": { en: "Active Audits", fr: "Audits actifs" },
-      "dashboard.upcomingDeadlines": {
-        en: "Upcoming Deadlines",
-        fr: "Échéances à venir",
-      },
+      "dashboard.upcomingDeadlines": {en: "Upcoming Deadlines",fr: "Échéances à venir"},
       "dashboard.recentAnnouncements": { en: "Announcements", fr: "Annonces" },
       "dashboard.viewAll": { en: "View all", fr: "Voir tout" },
       "dashboard.noAudits": { en: "No active audits", fr: "Aucun audit actif" },
-      "dashboard.noDeadlines": {
-        en: "No upcoming deadlines",
-        fr: "Aucune échéance",
-      },
-      "dashboard.noAnnouncements": {
-        en: "No announcements",
-        fr: "Aucune annonce",
-      },
+      "dashboard.noDeadlines": {en: "No upcoming deadlines",fr: "Aucune échéance"},
+      "dashboard.noAnnouncements": {en: "No announcements",fr: "Aucune annonce"},
       "audit.create": { en: "Create Audit", fr: "Créer un audit" },
       "audit.planned": { en: "Planned", fr: "Planifié" },
       "audit.unplanned": { en: "Unplanned", fr: "Non planifié" },
@@ -135,167 +123,77 @@ export function AppProvider({ children }) {
       "audit.startDate": { en: "Start Date", fr: "Date de début" },
       "audit.endDate": { en: "End Date", fr: "Date de fin" },
       "audit.createdAt": { en: "Created", fr: "Créé le" },
-      "audit.selectFromPlan": {
-        en: "Select from Yearly Plan",
-        fr: "Sélectionner du plan annuel",
-      },
-      "audit.noPlanned": {
-        en: "No planned audits",
-        fr: "Aucun audit planifié",
-      },
+      "audit.selectFromPlan": {en: "Select from Yearly Plan",fr: "Sélectionner du plan annuel"},
+      "audit.noPlanned": {en: "No planned audits",fr: "Aucun audit planifié"},
       "audit.noFound": { en: "No audits found", fr: "Aucun audit trouvé" },
       "audit.notFound": { en: "Audit not found", fr: "Audit introuvable" },
       "audit.loading": { en: "Loading...", fr: "Chargement..." },
       "audit.detail.overview": { en: "Overview", fr: "Aperçu" },
       "audit.detail.findings": { en: "Findings", fr: "Constats" },
       "audit.detail.reports": { en: "Reports", fr: "Rapports" },
-      "audit.detail.notifications": {
-        en: "Notifications",
-        fr: "Notifications",
-      },
-      "audit.detail.findingSheets": {
-        en: "Finding Sheets",
-        fr: "Fiches de constat",
-      },
+      "audit.detail.notifications": {en: "Notifications",fr: "Notifications"},
+      "audit.detail.findingSheets": {en: "Finding Sheets",fr: "Fiches de constat"},
       "audit.detail.timeline": { en: "Timeline", fr: "Chronologie" },
       "audit.detail.actions": { en: "Actions", fr: "Actions" },
-      "audit.detail.sendNotification": {
-        en: "Send Notification",
-        fr: "Envoyer la notification",
-      },
+      "audit.detail.sendNotification": {en: "Send Notification",fr: "Envoyer la notification"},
       "audit.detail.startAudit": { en: "Start Audit", fr: "Démarrer l'audit" },
-      "audit.detail.generateReport": {
-        en: "Generate Report",
-        fr: "Générer le rapport",
-      },
-      "audit.detail.markCompleted": {
-        en: "Mark Completed",
-        fr: "Marquer terminé",
-      },
+      "audit.detail.generateReport": {en: "Generate Report",fr: "Générer le rapport"},
+      "audit.detail.markCompleted": {en: "Mark Completed",fr: "Marquer terminé"},
       "audit.detail.noFindings": { en: "No findings yet", fr: "Aucun constat" },
       "audit.detail.noReports": { en: "No reports yet", fr: "Aucun rapport" },
-      "audit.detail.noDescription": {
-        en: "No description",
-        fr: "Aucune description",
-      },
+      "audit.detail.noDescription": {en: "No description",fr: "Aucune description"},
       "audit.detail.notAssigned": { en: "Not assigned", fr: "Non assigné" },
       "audit.detail.deadline": { en: "Deadline", fr: "Échéance" },
       "audit.detail.assigned": { en: "Assigned to", fr: "Assigné à" },
       "audit.detail.generated": { en: "Generated", fr: "Généré le" },
       "audit.detail.by": { en: "by", fr: "par" },
-      "audit.detail.notifyTitle": {
-        en: "Send Audit Notification",
-        fr: "Envoyer la notification d'audit",
-      },
-      "audit.detail.notifyBody": {
-        en: "This will generate the official notification document and notify all auditees.",
-        fr: "Cela générera le document officiel de notification et informera les personnes auditées.",
-      },
-      "audit.detail.notifySuccess": {
-        en: "Notification sent",
-        fr: "Notification envoyée",
-      },
-      "audit.detail.reportSuccess": {
-        en: "Report generated",
-        fr: "Rapport généré",
-      },
+      "audit.detail.notifyTitle": {en: "Send Audit Notification",fr: "Envoyer la notification d'audit"},
+      "audit.detail.notifyBody": {en: "This will generate the official notification document and notify all auditees.",fr: "Cela générera le document officiel de notification et informera les personnes auditées."},
+      "audit.detail.notifySuccess": {en: "Notification sent",fr: "Notification envoyée"},
+      "audit.detail.reportSuccess": {en: "Report generated",fr: "Rapport généré"},
       "audit.detail.download": { en: "Download PDF", fr: "Télécharger PDF" },
       "admin.audits.title": { en: "Manage Audits", fr: "Gérer les audits" },
       "admin.audits.total": { en: "Total", fr: "Total" },
       "admin.audits.draft": { en: "Draft", fr: "Brouillon" },
       "admin.audits.inProgress": { en: "In Progress", fr: "En cours" },
       "admin.audits.completed": { en: "Completed", fr: "Terminés" },
-      "admin.audits.allStatuses": {
-        en: "All Statuses",
-        fr: "Tous les statuts",
-      },
+      "admin.audits.allStatuses": {en: "All Statuses",fr: "Tous les statuts"},
       "admin.audits.allTypes": { en: "All Types", fr: "Tous les types" },
       "admin.audits.search": { en: "Search audits...", fr: "Rechercher..." },
-      "admin.audits.noFound": {
-        en: "No audits found",
-        fr: "Aucun audit trouvé",
-      },
-      "admin.audits.deleteTitle": {
-        en: "Delete Audit",
-        fr: "Supprimer l'audit",
-      },
-      "admin.audits.deleteBody": {
-        en: "This will permanently delete the audit and all its data.",
-        fr: "Cela supprimera définitivement l'audit et toutes ses données.",
-      },
+      "admin.audits.noFound": {en: "No audits found",fr: "Aucun audit trouvé"},
+      "admin.audits.deleteTitle": {en: "Delete Audit",fr: "Supprimer l'audit"},
+      "admin.audits.deleteBody": {en: "This will permanently delete the audit and all its data.", fr: "Cela supprimera définitivement l'audit et toutes ses données."},
       "admin.announcements.title": { en: "Announcements", fr: "Annonces" },
-      "admin.announcements.new": {
-        en: "New Announcement",
-        fr: "Nouvelle annonce",
-      },
+      "admin.announcements.new": {en: "New Announcement",fr: "Nouvelle annonce"},
       "admin.announcements.create": { en: "Create", fr: "Créer" },
-      "admin.announcements.all": {
-        en: "All Announcements",
-        fr: "Toutes les annonces",
-      },
+      "admin.announcements.all": {en: "All Announcements",fr: "Toutes les annonces"},
       "admin.announcements.content": { en: "Content", fr: "Contenu" },
       "admin.announcements.priority": { en: "Priority", fr: "Priorité" },
-      "admin.announcements.expires": {
-        en: "Expires (optional)",
-        fr: "Expire le (facultatif)",
-      },
+      "admin.announcements.expires": {en: "Expires (optional)",fr: "Expire le (facultatif)"},
       "admin.announcements.publish": { en: "Publish", fr: "Publier" },
-      "admin.announcements.publishedBy": {
-        en: "Published by",
-        fr: "Publié par",
-      },
+      "admin.announcements.publishedBy": {en: "Published by",fr: "Publié par"},
       "admin.announcements.expires2": { en: "Expires", fr: "Expire" },
       "admin.announcements.unknown": { en: "Unknown", fr: "Inconnu" },
       "admin.announcements.normal": { en: "Normal", fr: "Normal" },
       "admin.announcements.high": { en: "High", fr: "Haute" },
       "admin.announcements.urgent": { en: "Urgent", fr: "Urgente" },
-      "admin.issues.title": {
-        en: "Review Issues",
-        fr: "Examiner les signalements",
-      },
+      "admin.issues.title": {en: "Review Issues",fr: "Examiner les signalements"},
       "admin.issues.all": { en: "All Issues", fr: "Tous les signalements" },
-      "admin.issues.detail": {
-        en: "Issue Details",
-        fr: "Détails du signalement",
-      },
-      "admin.issues.select": {
-        en: "Select an issue to review",
-        fr: "Sélectionnez un signalement",
-      },
+      "admin.issues.detail": {en: "Issue Details",fr: "Détails du signalement"},
+      "admin.issues.select": {en: "Select an issue to review",fr: "Sélectionnez un signalement"},
       "admin.issues.category": { en: "Category", fr: "Catégorie" },
       "admin.issues.reportedBy": { en: "Reported by", fr: "Signalé par" },
       "admin.issues.assignTo": { en: "Assign to", fr: "Assigner à" },
-      "admin.issues.selectUser": {
-        en: "Select user",
-        fr: "Sélectionner un utilisateur",
-      },
+      "admin.issues.selectUser": {en: "Select user",fr: "Sélectionner un utilisateur"},
       "admin.issues.deadline": { en: "Deadline", fr: "Échéance" },
-      "admin.issues.corrective": {
-        en: "Corrective Action",
-        fr: "Action corrective",
-      },
-      "admin.issues.correctivePh": {
-        en: "Define corrective actions...",
-        fr: "Définir les actions correctives...",
-      },
+      "admin.issues.corrective": {en: "Corrective Action",fr: "Action corrective"},
+      "admin.issues.correctivePh": {en: "Define corrective actions...",fr: "Définir les actions correctives..."},
       "admin.issues.update": { en: "Save Review", fr: "Enregistrer l'examen" },
-      "admin.issues.generateReport": {
-        en: "Generate Report",
-        fr: "Générer le rapport",
-      },
-      "admin.issues.downloadReport": {
-        en: "Download Report",
-        fr: "Télécharger le rapport",
-      },
+      "admin.issues.generateReport": {en: "Generate Report",fr: "Générer le rapport"},
+      "admin.issues.downloadReport": {en: "Download Report",fr: "Télécharger le rapport"},
       "admin.issues.status.submitted": { en: "Submitted", fr: "Soumis" },
-      "admin.issues.status.under_review": {
-        en: "Under Review",
-        fr: "En cours d'examen",
-      },
-      "admin.issues.status.action_assigned": {
-        en: "Action Assigned",
-        fr: "Action assignée",
-      },
+      "admin.issues.status.under_review": {en: "Under Review",fr: "En cours d'examen"},
+      "admin.issues.status.action_assigned": {en: "Action Assigned",fr: "Action assignée"},
       "admin.issues.status.resolved": { en: "Resolved", fr: "Résolu" },
       "finding.severity.critical": { en: "Critical", fr: "Critique" },
       "finding.severity.major": { en: "Major", fr: "Majeur" },
@@ -315,10 +213,7 @@ export function AppProvider({ children }) {
       "calendar.type.meeting": { en: "Meeting", fr: "Réunion" },
       "yearlyPlan.title": { en: "Yearly Plan", fr: "Plan annuel" },
       "yearlyPlan.add": { en: "Add Entry", fr: "Ajouter" },
-      "yearlyPlan.addTitle": {
-        en: "Add Planned Audit",
-        fr: "Ajouter un audit planifié",
-      },
+      "yearlyPlan.addTitle": {en: "Add Planned Audit",fr: "Ajouter un audit planifié"},
       "yearlyPlan.auditTitle": { en: "Audit Title", fr: "Titre de l'audit" },
       "yearlyPlan.quarter": { en: "Quarter", fr: "Trimestre" },
       "yearlyPlan.month": { en: "Month", fr: "Mois" },
@@ -326,21 +221,12 @@ export function AppProvider({ children }) {
       "yearlyPlan.status.planned": { en: "Planned", fr: "Planifié" },
       "yearlyPlan.status.scheduled": { en: "Scheduled", fr: "Programmé" },
       "yearlyPlan.status.completed": { en: "Completed", fr: "Terminé" },
-      "yearlyPlan.noEntries": {
-        en: "No entries for this year",
-        fr: "Aucune entrée pour cette année",
-      },
+      "yearlyPlan.noEntries": {en: "No entries for this year",fr: "Aucune entrée pour cette année"},
       "yearlyPlan.year": { en: "Year", fr: "Année" },
-      "yearlyPlan.allQuarters": {
-        en: "All Quarters",
-        fr: "Tous les trimestres",
-      },
+      "yearlyPlan.allQuarters": {en: "All Quarters",fr: "Tous les trimestres"},
       "yearlyPlan.createAudit": { en: "Create Audit", fr: "Créer un audit" },
       "yearlyPlan.editEntry": { en: "Edit Entry", fr: "Modifier" },
-      "yearlyPlan.deleteConfirm": {
-        en: "Delete this entry?",
-        fr: "Supprimer cette entrée ?",
-      },
+      "yearlyPlan.deleteConfirm": {en: "Delete this entry?",fr: "Supprimer cette entrée ?"},
       "yearlyPlan.total": { en: "Total", fr: "Total" },
       "yearlyPlan.planned": { en: "Planned", fr: "Planifié" },
       "yearlyPlan.scheduled": { en: "Scheduled", fr: "Programmé" },
@@ -351,18 +237,36 @@ export function AppProvider({ children }) {
       "issue.category": { en: "Category", fr: "Catégorie" },
       "issue.urgency": { en: "Urgency", fr: "Urgence" },
       "issue.submit": { en: "Submit", fr: "Soumettre" },
-      "issue.submitSuccess": {
-        en: "Issue Submitted",
-        fr: "Signalement soumis",
-      },
-      "issue.submitSuccessBody": {
-        en: "Your issue has been submitted and will be reviewed.",
-        fr: "Votre signalement a été soumis et sera examiné.",
-      },
+      "issue.submitSuccess": {en: "Issue Submitted",fr: "Signalement soumis"},
+      "issue.submitSuccessBody": {en: "Your issue has been submitted and will be reviewed.",fr: "Votre signalement a été soumis et sera examiné."},
       "issue.urgency.low": { en: "Low", fr: "Faible" },
       "issue.urgency.normal": { en: "Normal", fr: "Normal" },
       "issue.urgency.high": { en: "High", fr: "Haute" },
       "issue.urgency.critical": { en: "Critical", fr: "Critique" },
+      "issue.details": { en: "Event Details", fr: "Détails de l'événement" },
+      "issue.eventName": { en: "Event", fr: "Événement" },
+      "issue.eventNamePlaceholder": { en: "Event name / title...", fr: "Nom / titre de l'événement..." },
+      "issue.source": { en: "Source", fr: "Source" },
+      "issue.sourcePlaceholder": { en: "Event origin...", fr: "Origine de l'événement..." },
+      "issue.descriptionPlaceholder": { en: "Full event description...", fr: "Description complète de l'événement..." },
+      "issue.riskEvaluation": { en: "Initial Risk Assessment", fr: "Évaluation initiale du risque" },
+      "issue.riskInstructions": { en: "Click on a matrix cell to set Probability (P) and Severity (S).", fr: "Cliquez sur une cellule de la matrice pour définir la Probabilité (P) et la Gravité (G)." },
+      "issue.probability": { en: "Probability (P)", fr: "Probabilité (P)" },
+      "issue.severity": { en: "Severity (S)", fr: "Gravité (G)" },
+      "issue.risk": { en: "Risk (R = P×S)", fr: "Risque (R = P×G)" },
+      "login.title": { en: "Login", fr: "Connexion" },
+      "login.subtitle": { en: "Sign in to access the audit platform.", fr: "Connectez-vous pour accéder à la plateforme d'audit." },
+      "login.email": { en: "Email address", fr: "Adresse e-mail" },
+      "login.password": { en: "Password", fr: "Mot de passe" },
+      "login.loading": { en: "Logging in...", fr: "Connexion en cours…" },
+      "login.button": { en: "Sign in", fr: "Se connecter" },
+      "login.error": { en: "Connection error. Check your internet connection.", fr: "Erreur de connexion. Vérifiez votre connexion internet." },
+      "login.demoTitle": { en: "Demo Credentials", fr: "Identifiants de démonstration" },
+      "login.demoEmail": { en: "Email:", fr: "Email :" },
+      "login.demoPassword": { en: "Password:", fr: "Mot de passe :" },
+      "login.defaultAccount": { en: "Default admin account:", fr: "Compte administrateur par défaut :" },
+      "login.footer": { en: "© {year} Tunisair — Quality Assurance and Safety Department", fr: "© {year} Tunisair — Direction Assurance Qualité et Sécurité" },
+      "login.footer2": { en: "Confidential internal audit system", fr: "Système d'audit interne confidentiel" },
       "settings.title": { en: "Settings", fr: "Paramètres" },
       "settings.profile": { en: "Profile", fr: "Profil" },
       "settings.editProfile": { en: "Edit Profile", fr: "Modifier le profil" },
@@ -378,14 +282,8 @@ export function AppProvider({ children }) {
       "settings.medium": { en: "Medium", fr: "Moyenne" },
       "settings.large": { en: "Large", fr: "Grande" },
       "notifications.title": { en: "Notifications", fr: "Notifications" },
-      "notifications.none": {
-        en: "No notifications",
-        fr: "Aucune notification",
-      },
-      "notifications.markRead": {
-        en: "Mark all read",
-        fr: "Tout marquer comme lu",
-      },
+      "notifications.none": {en: "No notifications",fr: "Aucune notification"},
+      "notifications.markRead": {en: "Mark all read",fr: "Tout marquer comme lu"},
       "common.save": { en: "Save", fr: "Enregistrer" },
       "common.cancel": { en: "Cancel", fr: "Annuler" },
       "common.delete": { en: "Delete", fr: "Supprimer" },
@@ -399,6 +297,7 @@ export function AppProvider({ children }) {
       "common.status": { en: "Status", fr: "Statut" },
       "common.type": { en: "Type", fr: "Type" },
       "common.department": { en: "Department", fr: "Département" },
+      "common.location": { en: "Location", fr: "Lieu" },
       "common.auditor": { en: "Auditor", fr: "Auditeur" },
       "common.na": { en: "N/A", fr: "N/A" },
       "common.unknown": { en: "Unknown", fr: "Inconnu" },
@@ -430,25 +329,10 @@ export function AppProvider({ children }) {
       "day.fri": { en: "Fri", fr: "Ven" },
       "day.sat": { en: "Sat", fr: "Sam" },
     };
-    return translations[key]?.[language] || key;
-  };
-
+    return translations[key]?.[language] || key;}, [language]);
+  const memoizedT = useMemo(() => t, [language]);
   return (
-    <AppContext.Provider
-      value={{
-        theme,
-        language,
-        fontSize,
-        currentUser,
-        authChecked,
-        updateCurrentUser,
-        logout,
-        toggleTheme,
-        toggleLanguage,
-        changeFontSize,
-        t,
-      }}
-    >
+    <AppContext.Provider value={{theme,language,fontSize,currentUser,authChecked,updateCurrentUser,logout,toggleTheme,toggleLanguage,changeFontSize,t: memoizedT,}}>
       {children}
     </AppContext.Provider>
   );

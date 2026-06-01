@@ -123,7 +123,7 @@ export function ManageTab({
           <select
             value={formData.responsible_id}
             onChange={(e) =>
-              setFormData({ ...formData, responsible_id: e.target.value })
+              setFormData((prev) => ({ ...prev, responsible_id: e.target.value }))
             }
             className={inputCls}
             style={iStyle}
@@ -147,7 +147,7 @@ export function ManageTab({
             type="date"
             value={formData.review_date}
             onChange={(e) =>
-              setFormData({ ...formData, review_date: e.target.value })
+              setFormData((prev) => ({ ...prev, review_date: e.target.value }))
             }
             className={inputCls}
             style={iStyle}
@@ -163,7 +163,7 @@ export function ManageTab({
           <input
             value={formData.potential_hazard || ""}
             onChange={(e) =>
-              setFormData({ ...formData, potential_hazard: e.target.value })
+              setFormData((prev) => ({ ...prev, potential_hazard: e.target.value }))
             }
             className={inputCls}
             style={iStyle}
@@ -216,7 +216,7 @@ export function ManageTab({
         <textarea
           value={formData.investigation}
           onChange={(e) =>
-            setFormData({ ...formData, investigation: e.target.value })
+            setFormData((prev) => ({ ...prev, investigation: e.target.value }))
           }
           rows={3}
           className={inputCls}

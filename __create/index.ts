@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import nodeConsole from 'node:console';
 import { skipCSRFCheck } from '@auth/core';

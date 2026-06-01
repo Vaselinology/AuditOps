@@ -142,7 +142,7 @@ export default function AdminAnnouncements() {
                 <textarea
                   value={formData.content}
                   onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
+                    setFormData((prev) => ({ ...prev, content: e.target.value }))
                   }
                   required
                   rows={4}
@@ -196,7 +196,7 @@ export default function AdminAnnouncements() {
                     type="datetime-local"
                     value={formData.expires_at}
                     onChange={(e) =>
-                      setFormData({ ...formData, expires_at: e.target.value })
+                      setFormData((prev) => ({ ...prev, expires_at: e.target.value }))
                     }
                     className="w-full px-4 py-2 rounded-lg border text-sm"
                     style={{
