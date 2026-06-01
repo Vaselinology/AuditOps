@@ -1,9 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function GET(request, { params }) {
   try {
     const { id } = params;
-    const { data: audit, error: auditError } = await supabase
+    const { data: audit, error: auditError } = await supabaseServer
       .from('audits')
       .select(`
         *,
@@ -25,7 +25,7 @@ export async function GET(request, { params }) {
       return Response.json({ error: "Audit not found" }, { status: 404 });
     }
 
-    const { data: findings } = await supabase
+    const { data: findings } = await supabaseServer
       .from('findings')
       .select(`
         *,
@@ -38,7 +38,7 @@ export async function GET(request, { params }) {
       .eq('audit_id', id)
       .order('created_at', { ascending: false });
 
-    const { data: reports } = await supabase
+    const { data: reports } = await supabaseServer
       .from('audit_reports')
       .select(`
         *,
@@ -51,13 +51,13 @@ export async function GET(request, { params }) {
       .eq('audit_id', id)
       .order('generated_at', { ascending: false });
 
-    const { data: notifications } = await supabase
+    const { data: notifications } = await supabaseServer
       .from('audit_notifications')
       .select('*')
       .eq('audit_id', id)
       .order('created_at', { ascending: false });
 
-    const { data: finding_sheets } = await supabase
+    const { data: finding_sheets } = await supabaseServer
       .from('finding_sheets')
       .select('*')
       .eq('audit_id', id)
@@ -126,7 +126,7 @@ export async function PATCH(request, { params }) {
 
     updateData.updated_at = new Date().toISOString();
 
-    const { data: audit, error } = await supabase
+    const { data: audit, error } = await supabaseServer
       .from('audits')
       .update(updateData)
       .eq('id', id)
@@ -147,7 +147,7 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
-    const { error } = await supabase
+    const { error } = await supabaseServer
       .from('audits')
       .delete()
       .eq('id', id);

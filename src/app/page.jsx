@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import AppShell from "@/components/AppShell";
+import DashboardStats from "@/components/DashboardStats";
 import { Calendar, FileText, AlertCircle } from "lucide-react";
 
 export default function Dashboard() {
@@ -65,6 +66,11 @@ export default function Dashboard() {
   return (
     <AppShell title={t("dashboard.title")}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Statistics Dashboard */}
+        <div className="mb-8">
+          <DashboardStats />
+        </div>
+
         {/* Announcements Banner */}
         {announcements.length > 0 && (
           <div className="mb-6 space-y-3">

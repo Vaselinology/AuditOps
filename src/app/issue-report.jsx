@@ -57,7 +57,9 @@ export default function ReportIssue() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to submit");
+      const data = await res.json();
+      console.log("BACKEND RESPONSE:", data);
+      if (!res.ok) throw new Error(data.error);
       setSuccess(true);
       setForm({event_name: "",location: "",source: "",description: "",urgency: "normal",initial_probability: null,initial_severity: null,});
     } catch (err) {

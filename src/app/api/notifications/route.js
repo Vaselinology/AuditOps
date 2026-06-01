@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function GET(request) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request) {
       return Response.json({ error: "user_id is required" }, { status: 400 });
     }
 
-    let query = supabase
+    let query = supabaseServer
       .from('notifications')
       .select('*')
       .eq('user_id', user_id);
@@ -47,7 +47,7 @@ export async function PATCH(request) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseServer
       .from('notifications')
       .update({ is_read: is_read !== false })
       .eq('id', notification_id);
@@ -76,7 +76,7 @@ export async function POST(request) {
       );
     }
 
-    const { data: notification, error } = await supabase
+    const { data: notification, error } = await supabaseServer
       .from('notifications')
       .insert({
         user_id,

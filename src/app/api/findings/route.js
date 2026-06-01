@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function POST(request) {
   try {
@@ -9,8 +9,7 @@ export async function POST(request) {
       return Response.json({ error: "audit_id is required" }, { status: 400 });
     }
 
-    // Get audit details for finding number
-    const { data: audit, error: auditError } = await supabase
+    const { data: audit, error: auditError } = await supabaseServer
       .from('audits')
       .select('audit_number')
       .eq('id', audit_id)
@@ -20,14 +19,14 @@ export async function POST(request) {
       return Response.json({ error: "Audit not found" }, { status: 404 });
     }
 
-    const { count } = await supabase
+    const { count } = await supabaseServer
       .from('findings')
       .select('*', { count: 'exact', head: true })
       .eq('audit_id', audit_id);
 
-    const finding_number = `${audit.audit_number}-F${(count + 1).toString().padStart(2, "0")}`;
+    const safeCount = count ?? 0;
+    const finding_number = `${audit.audit_number}-F${(safeCount + 1).toString().padStart(2, "0")}`;
 
-    // Calculate deadline based on severity
     let deadline = new Date();
     if (severity === "critical") {
       deadline.setDate(deadline.getDate() + 7);
@@ -37,7 +36,7 @@ export async function POST(request) {
       deadline.setDate(deadline.getDate() + 90);
     }
 
-    const { data: finding, error } = await supabase
+    const { data: finding, error } = await supabaseServer
       .from('findings')
       .insert({
         audit_id,
@@ -53,8 +52,7 @@ export async function POST(request) {
 
     if (error) throw error;
 
-    // Create calendar event for deadline
-    await supabase
+    await supabaseServer
       .from('calendar_events')
       .insert({
         title: `${finding_number}: ${title}`,

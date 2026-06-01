@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function GET(request) {
   try {
@@ -6,7 +6,7 @@ export async function GET(request) {
     const plan_id = searchParams.get("plan_id") || 1;
     const year = searchParams.get("year") || new Date().getFullYear();
 
-    const { data: rows } = await supabase
+    const { data: rows } = await supabaseServer
       .from('programme_rows')
       .select('*')
       .eq('plan_id', plan_id)
@@ -18,7 +18,7 @@ export async function GET(request) {
     const rowIds = rows?.map((r) => r.id) || [];
     let slots = [];
     if (rowIds.length > 0) {
-      const { data: slotsData } = await supabase
+      const { data: slotsData } = await supabaseServer
         .from('programme_slots')
         .select('*')
         .in('row_id', rowIds)
@@ -42,7 +42,7 @@ export async function POST(request) {
     const body = await request.json();
     const { plan_id, year, domain, referentiel } = body;
 
-    const { data: maxOrderData } = await supabase
+    const { data: maxOrderData } = await supabaseServer
       .from('programme_rows')
       .select('sort_order')
       .eq('plan_id', plan_id)
@@ -52,7 +52,7 @@ export async function POST(request) {
 
     const sort_order = (maxOrderData?.[0]?.sort_order || 0) + 1;
 
-    const { data: row } = await supabase
+    const { data: row } = await supabaseServer
       .from('programme_rows')
       .insert({
         plan_id,

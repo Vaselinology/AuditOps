@@ -3,13 +3,20 @@
 import { useEffect, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import AppShell from "@/components/AppShell";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Plus, X } from "lucide-react";
 
 export default function CalendarPage() {
   const { theme, t, language } = useApp();
   const [events, setEvents] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    event_date: "",
+    event_type: "meeting",
+  });
 
   const isDark = theme === "dark";
   const bg = isDark ? "#111827" : "#FFFFFF";
@@ -46,6 +53,24 @@ export default function CalendarPage() {
   const goToday = () => {
     setCurrentDate(new Date());
     setSelectedDay(new Date().getDate());
+  };
+
+  const handleAddEvent = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) {
+        setShowModal(false);
+        setFormData({ title: "", description: "", event_date: "", event_type: "meeting" });
+        fetchEvents();
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Build calendar grid
@@ -111,17 +136,27 @@ export default function CalendarPage() {
   const monthLabel = `${t(`month.${month + 1}`)} ${year}`;
 
   const topbarActions = (
-    <button
-      onClick={goToday}
-      className="px-4 py-2 rounded-lg border text-sm font-medium"
-      style={{ borderColor, color: textPrimary }}
-    >
-      {t("calendar.today")}
-    </button>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={goToday}
+        className="px-4 py-2 rounded-lg border text-sm font-medium"
+        style={{ borderColor, color: textPrimary }}
+      >
+        {t("Today")}
+      </button>
+      <button
+        onClick={() => setShowModal(true)}
+        className="px-4 py-2 rounded-lg border text-sm font-medium flex items-center gap-2"
+        style={{ borderColor, color: textPrimary, backgroundColor: "#2563EB", color: "#FFFFFF" }}
+      >
+        <Plus size={16} />
+        {t("Add Event")}
+      </button>
+    </div>
   );
 
   return (
-    <AppShell title={t("calendar.title")} actions={topbarActions}>
+    <AppShell title={t("Title")} actions={topbarActions}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           {/* Calendar grid */}
@@ -249,13 +284,13 @@ export default function CalendarPage() {
                 className="text-sm font-semibold mb-3"
                 style={{ color: textPrimary }}
               >
-                {t("calendar.events")}
+                {t("Events")}
               </h3>
               <div className="space-y-2">
                 {[
-                  { type: "audit", label: t("calendar.type.audit") },
-                  { type: "deadline", label: t("calendar.type.deadline") },
-                  { type: "meeting", label: t("calendar.type.meeting") },
+                  { type: "audit", label: t("Audit") },
+                  { type: "deadline", label: t("Deadline") },
+                  { type: "meeting", label: t("Meeting") },
                 ].map(({ type, label }) => (
                   <div key={type} className="flex items-center gap-2">
                     <div
@@ -281,7 +316,7 @@ export default function CalendarPage() {
               >
                 {selectedDay
                   ? `${selectedDay} ${t(`month.${month + 1}`)}`
-                  : t("calendar.today")}
+                  : t("Today")}
               </h3>
               {(selectedDay
                 ? selectedDayEvents
@@ -294,7 +329,7 @@ export default function CalendarPage() {
                     style={{ color: textMuted }}
                   />
                   <p className="text-sm" style={{ color: textMuted }}>
-                    {t("calendar.noEvents")}
+                    {t("No Events")}
                   </p>
                 </div>
               ) : (
@@ -342,6 +377,106 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Event Modal */}
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="rounded-xl border p-6 w-full max-w-md"
+            style={{ backgroundColor: bg, borderColor }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold" style={{ color: textPrimary }}>
+                {t("Add an Event")}
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-1 rounded-lg"
+                style={{ color: textMuted }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleAddEvent} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: textPrimary }}>
+                  {t("Title")}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border text-sm"
+                  style={{ borderColor, backgroundColor: bgMuted, color: textPrimary }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: textPrimary }}>
+                  {t("Description")}
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border text-sm"
+                  style={{ borderColor, backgroundColor: bgMuted, color: textPrimary }}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: textPrimary }}>
+                  {t("Date")}
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.event_date}
+                  onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border text-sm"
+                  style={{ borderColor, backgroundColor: bgMuted, color: textPrimary }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: textPrimary }}>
+                  {t("Type")}
+                </label>
+                <select
+                  value={formData.event_type}
+                  onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border text-sm"
+                  style={{ borderColor, backgroundColor: bgMuted, color: textPrimary }}
+                >
+                  <option value="meeting">{t("Meeting")}</option>
+                  <option value="audit">{t("Audit")}</option>
+                  <option value="deadline">{t("Deadline")}</option>
+                </select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border text-sm font-medium"
+                  style={{ borderColor, color: textPrimary }}
+                >
+                  {t("Cancel")}
+                </button>
+                <button
+                  type="Submit"
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                >
+                  {t("Save")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

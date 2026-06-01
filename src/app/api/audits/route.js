@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function GET(request) {
   try {
@@ -7,7 +7,7 @@ export async function GET(request) {
     const type = searchParams.get("type");
     const department = searchParams.get("department");
 
-    let query = supabase
+    let query = supabaseServer
       .from('audits')
       .select(`
         *,
@@ -36,7 +36,6 @@ export async function GET(request) {
 
     if (error) throw error;
 
-    // Transform the data to match the old format
     const transformedAudits = audits.map(audit => ({
       ...audit,
       auditor_name: audit.users ? `${audit.users.first_name} ${audit.users.last_name}` : null
@@ -69,18 +68,18 @@ export async function POST(request) {
       auditees,
     } = body;
 
-    // Auto-generate audit number e.g. NA-26-01
     const year = new Date().getFullYear().toString().slice(-2);
     const currentYear = new Date().getFullYear();
-    const { count } = await supabase
+    const { count } = await supabaseServer
       .from('audits')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', `${currentYear}-01-01`)
       .lt('created_at', `${currentYear + 1}-01-01`);
 
-    const audit_number = `NA-${year}-${(count + 1).toString().padStart(2, "0")}`;
+    const safeCount = count ?? 0;
+    const audit_number = `NA-${year}-${(safeCount + 1).toString().padStart(2, "0")}`;
 
-    const { data: audit, error } = await supabase
+    const { data: audit, error } = await supabaseServer
       .from('audits')
       .insert({
         audit_number,
@@ -105,9 +104,8 @@ export async function POST(request) {
 
     if (error) throw error;
 
-    // Auto-create a calendar event when a date is set
     if (planned_date) {
-      await supabase
+      await supabaseServer
         .from('calendar_events')
         .insert({
           title,

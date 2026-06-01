@@ -1,13 +1,9 @@
-import sql from "@/app/api/utils/sql";
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function PATCH(request, { params }) {
   try {
     const { id } = params;
     const body = await request.json();
-
-    const updates = [];
-    const values = [];
-    let paramCount = 1;
 
     const allowedFields = [
       "planned_audit_title",
@@ -17,30 +13,33 @@ export async function PATCH(request, { params }) {
       "status",
       "notes",
     ];
+
+    const updateData = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
-        updates.push(`${field} = $${paramCount}`);
-        values.push(body[field] || null);
-        paramCount++;
+        updateData[field] = body[field] || null;
       }
     }
 
-    if (updates.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return Response.json(
         { error: "No valid fields to update" },
         { status: 400 },
       );
     }
 
-    values.push(id);
-    const query = `UPDATE yearly_planning SET ${updates.join(", ")} WHERE id = $${paramCount} RETURNING *`;
-    const result = await sql(query, values);
+    const { data: plan, error } = await supabaseServer
+      .from('yearly_planning')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (result.length === 0) {
+    if (error || !plan) {
       return Response.json({ error: "Entry not found" }, { status: 404 });
     }
 
-    return Response.json({ plan: result[0] });
+    return Response.json({ plan });
   } catch (error) {
     console.error("Error updating yearly plan:", error);
     return Response.json(
@@ -53,7 +52,13 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
-    await sql`DELETE FROM yearly_planning WHERE id = ${id}`;
+    const { error } = await supabaseServer
+      .from('yearly_planning')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
     return Response.json({ success: true });
   } catch (error) {
     console.error("Error deleting yearly plan:", error);

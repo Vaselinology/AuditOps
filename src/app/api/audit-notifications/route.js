@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function POST(request) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request) {
       return Response.json({ error: "audit_id required" }, { status: 400 });
     }
 
-    const { data: audit } = await supabase
+    const { data: audit } = await supabaseServer
       .from('audits')
       .select('audit_number')
       .eq('id', audit_id)
@@ -17,7 +17,7 @@ export async function POST(request) {
 
     const auditNumber = audit?.audit_number || "NA-XX-XX";
 
-    await supabase
+    await supabaseServer
       .from('audit_notifications')
       .delete()
       .eq('audit_id', audit_id);
@@ -25,7 +25,7 @@ export async function POST(request) {
     const results = [];
 
     if (html_dgac) {
-      const { data } = await supabase
+      const { data } = await supabaseServer
         .from('audit_notifications')
         .insert({
           audit_id,
@@ -40,7 +40,7 @@ export async function POST(request) {
     }
 
     if (html_part) {
-      const { data } = await supabase
+      const { data } = await supabaseServer
         .from('audit_notifications')
         .insert({
           audit_id,
@@ -54,7 +54,7 @@ export async function POST(request) {
       results.push(data);
     }
 
-    await supabase
+    await supabaseServer
       .from('audits')
       .update({
         notification_sent_at: new Date().toISOString(),

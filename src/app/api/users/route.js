@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function GET(request) {
   try {
@@ -6,7 +6,7 @@ export async function GET(request) {
     const role = searchParams.get("role");
     const departmentId = searchParams.get("department");
 
-    let query = supabase
+    let query = supabaseServer
       .from('users')
       .select('*');
 
@@ -36,7 +36,7 @@ export async function POST(request) {
     const body = await request.json();
     const { email, first_name, last_name, role, department_id, password_hash, title, activity } = body;
 
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabaseServer
       .from('users')
       .insert({
         email,
@@ -76,7 +76,7 @@ export async function PATCH(request) {
     if (title !== undefined) updateData.title = title;
     if (activity !== undefined) updateData.activity = activity;
 
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabaseServer
       .from('users')
       .update(updateData)
       .eq('id', id)
@@ -98,7 +98,7 @@ export async function DELETE(request) {
     const id = searchParams.get("id");
     if (!id) return Response.json({ error: "id required" }, { status: 400 });
 
-    const { error } = await supabase
+    const { error } = await supabaseServer
       .from('users')
       .delete()
       .eq('id', id);

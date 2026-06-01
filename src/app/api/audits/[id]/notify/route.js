@@ -1,10 +1,10 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function POST(request, { params }) {
   try {
     const { id } = params;
 
-    const { data: audit, error: auditError } = await supabase
+    const { data: audit, error: auditError } = await supabaseServer
       .from('audits')
       .select('*')
       .eq('id', id)
@@ -14,7 +14,7 @@ export async function POST(request, { params }) {
       return Response.json({ error: "Audit not found" }, { status: 404 });
     }
 
-    await supabase
+    await supabaseServer
       .from('audits')
       .update({
         status: 'notified',
@@ -24,20 +24,20 @@ export async function POST(request, { params }) {
 
     let users;
     if (audit.department) {
-      const { data } = await supabase
+      const { data } = await supabaseServer
         .from('users')
         .select('*')
         .eq('department_id', audit.department);
       users = data || [];
     } else {
-      const { data } = await supabase
+      const { data } = await supabaseServer
         .from('users')
         .select('*');
       users = data || [];
     }
 
     for (const user of users) {
-      await supabase
+      await supabaseServer
         .from('notifications')
         .insert({
           user_id: user.id,

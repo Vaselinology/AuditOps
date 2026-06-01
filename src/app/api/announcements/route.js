@@ -1,8 +1,8 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function GET(request) {
   try {
-    const { data: announcements, error } = await supabase
+    const { data: announcements, error } = await supabaseServer
       .from('announcements')
       .select(`
         *,
@@ -38,7 +38,7 @@ export async function POST(request) {
     const body = await request.json();
     const { title, content, priority, published_by, expires_at } = body;
 
-    const { data: announcement, error } = await supabase
+    const { data: announcement, error } = await supabaseServer
       .from('announcements')
       .insert({
         title,
@@ -71,7 +71,7 @@ export async function DELETE(request) {
       return Response.json({ error: "id is required" }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseServer
       .from('announcements')
       .delete()
       .eq('id', id);

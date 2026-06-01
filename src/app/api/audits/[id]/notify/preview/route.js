@@ -1,11 +1,11 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseServer } from '@/lib/supabase-server';
 
 export async function POST(request, { params }) {
   try {
     const { id } = params;
     const body = await request.json();
 
-    const { data: audit, error: auditError } = await supabase
+    const { data: audit, error: auditError } = await supabaseServer
       .from('audits')
       .select('*')
       .eq('id', id)
@@ -15,7 +15,6 @@ export async function POST(request, { params }) {
       return Response.json({ error: "Audit not found" }, { status: 404 });
     }
 
-    // Generate notification HTML for DGAC and PART versions
     const dgacHtml = generateNotificationHtml(audit, body, 'DGAC');
     const partHtml = generateNotificationHtml(audit, body, 'PART');
 
