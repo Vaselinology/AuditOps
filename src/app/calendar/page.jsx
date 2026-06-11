@@ -147,7 +147,7 @@ export default function CalendarPage() {
       <button
         onClick={() => setShowModal(true)}
         className="px-4 py-2 rounded-lg border text-sm font-medium flex items-center gap-2"
-        style={{ borderColor, color: textPrimary, backgroundColor: "#2563EB", color: "#FFFFFF" }}
+        style={{ borderColor, backgroundColor: "#2563EB", color: "#FFFFFF" }}
       >
         <Plus size={16} />
         {t("Add Event")}

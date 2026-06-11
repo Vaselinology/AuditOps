@@ -340,41 +340,6 @@ export function ManageTab({
             />
           </div>
         </div>
-        <div className="mt-3">
-          <label
-            className="block text-sm font-medium mb-2"
-            style={{ color: textPrimary }}
-          >
-            Analyse du risque
-          </label>
-          <div className="flex gap-6">
-            {[
-              ["P — Probabilité", "risk_analysis_p"],
-              ["G — Gravité", "risk_analysis_s"],
-              ["R — Risque", "risk_analysis_r"],
-            ].map(([label, key]) => (
-              <label
-                key={key}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={formData[key]}
-                  onChange={(e) =>
-                    setFormData({ ...formData, [key]: e.target.checked })
-                  }
-                  className="w-4 h-4 accent-blue-600"
-                />
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: textPrimary }}
-                >
-                  {label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
       </div>
 
       <div className="flex gap-3 pt-2">

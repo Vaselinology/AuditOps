@@ -1,21 +1,6 @@
-import { getToken } from '@auth/core/jwt';
 export async function GET(request) {
-	const isSecure = process.env.AUTH_URL?.startsWith('https') ?? request.url?.startsWith('https') ?? false;
-	const [token, jwt] = await Promise.all([
-		getToken({
-			req: request,
-			secret: process.env.AUTH_SECRET,
-			secureCookie: isSecure,
-			raw: true,
-		}),
-		getToken({
-			req: request,
-			secret: process.env.AUTH_SECRET,
-			secureCookie: isSecure,
-		}),
-	]);
-
-	if (!jwt) {
+	const userStr = request.headers.get('x-user-session');
+	if (!userStr) {
 		return new Response(
 			`
 			<html>
@@ -35,30 +20,50 @@ export async function GET(request) {
 		);
 	}
 
-	const message = {
-		type: 'AUTH_SUCCESS',
-		jwt: token,
-		user: {
-			id: jwt.sub,
-			email: jwt.email,
-			name: jwt.name,
-		},
-	};
-
-	return new Response(
-		`
-		<html>
-			<body>
-				<script>
-					window.parent.postMessage(${JSON.stringify(message)}, '*');
-				</script>
-			</body>
-		</html>
-		`,
-		{
-			headers: {
-				'Content-Type': 'text/html',
+	try {
+		const user = JSON.parse(userStr);
+		const message = {
+			type: 'AUTH_SUCCESS',
+			user: {
+				id: user.id,
+				email: user.email,
+				name: user.name,
 			},
-		}
-	);
+		};
+
+		return new Response(
+			`
+			<html>
+				<body>
+					<script>
+						window.parent.postMessage(${JSON.stringify(message)}, '*');
+					</script>
+				</body>
+			</html>
+			`,
+			{
+				headers: {
+					'Content-Type': 'text/html',
+				},
+			}
+		);
+	} catch {
+		return new Response(
+			`
+			<html>
+				<body>
+					<script>
+						window.parent.postMessage({ type: 'AUTH_ERROR', error: 'Invalid session' }, '*');
+					</script>
+				</body>
+			</html>
+			`,
+			{
+				status: 401,
+				headers: {
+					'Content-Type': 'text/html',
+				},
+			}
+		);
+	}
 }

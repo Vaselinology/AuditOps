@@ -37,7 +37,9 @@ export default function Login() {
         setError(data.error || "Identifiants invalides. Veuillez réessayer.");
         return;
       }
+      console.log("Storing user in localStorage:", data.user);
       localStorage.setItem(SESSION_KEY, JSON.stringify(data.user));
+      console.log("User stored in localStorage, redirecting to /");
       window.location.href = "/";
     } catch {
       setError("Erreur de connexion. Vérifiez votre connexion internet.");

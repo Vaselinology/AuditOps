@@ -24,7 +24,13 @@ export async function GET(request) {
 
     if (error) throw error;
 
-    return Response.json({ users });
+    // Transform users to include name property for dropdowns
+    const usersWithNames = users.map(u => ({
+      ...u,
+      name: `${u.first_name} ${u.last_name}`.trim()
+    }));
+
+    return Response.json({ users: usersWithNames });
   } catch (error) {
     console.error("Error fetching users:", error);
     return Response.json({ error: "Failed to fetch users" }, { status: 500 });

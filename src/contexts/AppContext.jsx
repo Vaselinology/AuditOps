@@ -24,27 +24,30 @@ export function AppProvider({ children }) {
 
     if (savedSession) {
       try {
-        setCurrentUser(JSON.parse(savedSession));
+        const user = JSON.parse(savedSession);
+        console.log("Loaded user from localStorage:", user);
+        setCurrentUser(user);
       } catch {
+        console.error("Failed to parse session from localStorage");
         setCurrentUser(null);
       }
     } else {
+      console.log("No session found in localStorage");
       setCurrentUser(null);
     }
     setAuthChecked(true);
   }, []);
 
   useEffect(() => {
-    // Temporarily disable authentication check for debugging
-    // if (!authChecked) return;
-    // if (typeof window === "undefined") return;
-    // const onLoginPage = window.location.pathname === "/login";
-    // if (!currentUser && !onLoginPage) {
-    //   window.location.href = "/login";
-    // }
-    // if (currentUser && onLoginPage) {
-    //   window.location.href = "/";
-    // }
+    if (!authChecked) return;
+    if (typeof window === "undefined") return;
+    const onLoginPage = window.location.pathname === "/login";
+    if (!currentUser && !onLoginPage) {
+      window.location.href = "/login";
+    }
+    if (currentUser && onLoginPage) {
+      window.location.href = "/";
+    }
   }, [authChecked, currentUser]);
 
   useEffect(() => {

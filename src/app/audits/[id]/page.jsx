@@ -17,8 +17,29 @@ export default function AuditDetail({ params }) {
   const [audit, setAudit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showNotifyDialog, setShowNotifyDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showFindingSheetDialog, setShowFindingSheetDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [downloading, setDownloading] = useState(false);
+  const [notifyFormData, setNotifyFormData] = useState({ 
+    date: "", 
+    location: "", 
+    notes: "",
+    type: "",
+    duration: "",
+    referentiels: "",
+    auditPlan: [
+      { time: "08h00", activity: "Réunion d'ouverture", auditor: "", observations: "" },
+      { time: "09h00", activity: "", auditor: "", observations: "" },
+      { time: "12h00", activity: "Pause déjeuner", auditor: "", observations: "" },
+      { time: "13h00", activity: "", auditor: "", observations: "" },
+      { time: "16h00", activity: "Réunion de clôture", auditor: "", observations: "" }
+    ]
+  });
+  const [reportFormData, setReportFormData] = useState({ date: "", notes: "" });
+  const [findingSheetFormData, setFindingSheetFormData] = useState({ date: "", notes: "" });
+  const [previewHtml, setPreviewHtml] = useState(null);
+  const [previewVersion, setPreviewVersion] = useState(null);
 
   const isDark = theme === "dark";
   const bg = isDark ? "#111827" : "#FFFFFF";
@@ -49,10 +70,98 @@ export default function AuditDetail({ params }) {
     try {
       const res = await fetch(`/api/audits/${params.id}/notify`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notifyFormData),
       });
       if (res.ok) {
         setShowNotifyDialog(false);
+        setPreviewHtml(null);
         fetchAudit();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const generateReport = async () => {
+    try {
+      const res = await fetch(`/api/audits/${params.id}/reports`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reportFormData),
+      });
+      if (res.ok) {
+        setShowReportDialog(false);
+        setPreviewHtml(null);
+        fetchAudit();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const generateFindingSheet = async () => {
+    try {
+      const res = await fetch(`/api/audits/${params.id}/finding-sheets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(findingSheetFormData),
+      });
+      if (res.ok) {
+        setShowFindingSheetDialog(false);
+        setPreviewHtml(null);
+        fetchAudit();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const previewNotification = async (version) => {
+    try {
+      const res = await fetch(`/api/audits/${params.id}/notify/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notifyFormData),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewHtml(data[version.toLowerCase()]);
+        setPreviewVersion(version);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const previewReport = async (version) => {
+    try {
+      const res = await fetch(`/api/audits/${params.id}/reports/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reportFormData),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewHtml(data[version.toLowerCase()]);
+        setPreviewVersion(version);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const previewFindingSheet = async (version) => {
+    try {
+      const res = await fetch(`/api/audits/${params.id}/finding-sheets/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(findingSheetFormData),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewHtml(data[version.toLowerCase()]);
+        setPreviewVersion(version);
       }
     } catch (err) {
       console.error(err);
@@ -507,12 +616,41 @@ export default function AuditDetail({ params }) {
             className="rounded-xl border p-6"
             style={{ backgroundColor: bg, borderColor }}
           >
-            <h2
-              className="text-lg font-semibold mb-4"
-              style={{ color: textPrimary }}
-            >
-              {t("audit.detail.findings")}
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="text-lg font-semibold"
+                style={{ color: textPrimary }}
+              >
+                {t("audit.detail.findings")}
+              </h2>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    const title = prompt("Finding title:");
+                    if (title) {
+                      const description = prompt("Description:");
+                      const severity = prompt("Severity (critical/major/minor):", "minor");
+                      if (description && severity) {
+                        fetch("/api/findings", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            audit_id: audit.id,
+                            title,
+                            description,
+                            severity,
+                          }),
+                        }).then(() => fetchAudit());
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                >
+                  Add Finding
+                </button>
+              )}
+            </div>
             {audit.findings?.length > 0 ? (
               <div className="space-y-3">
                 {audit.findings.map((f) => (
@@ -585,10 +723,38 @@ export default function AuditDetail({ params }) {
 
         {activeTab === "notifications" && (
           <div className="space-y-6">
-            <p className="text-sm" style={{ color: textMuted }}>
-              Les notifications d'audit générées pour cet audit — deux versions
-              : DGAC et PART.
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm" style={{ color: textMuted }}>
+                Les notifications d'audit générées pour cet audit — deux versions
+                : DGAC et PART.
+              </p>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    setNotifyFormData({
+                      date: new Date().toISOString().split('T')[0],
+                      location: audit.audit_place || "",
+                      notes: "",
+                      type: audit.type || "Planifié",
+                      duration: "",
+                      referentiels: "",
+                      auditPlan: [
+                        { time: "08h00", activity: "Réunion d'ouverture", auditor: audit.auditor_name || "", observations: "" },
+                        { time: "09h00", activity: "", auditor: audit.auditor_name || "", observations: "" },
+                        { time: "12h00", activity: "Pause déjeuner", auditor: "", observations: "" },
+                        { time: "13h00", activity: "", auditor: audit.auditor_name || "", observations: "" },
+                        { time: "16h00", activity: "Réunion de clôture", auditor: audit.auditor_name || "", observations: "" }
+                      ]
+                    });
+                    setShowNotifyDialog(true);
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                >
+                  Generate Notifications
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {["DGAC", "PART"].map((v) => {
                 const doc = (audit.notifications || []).find(
@@ -610,9 +776,26 @@ export default function AuditDetail({ params }) {
 
         {activeTab === "reports" && (
           <div className="space-y-6">
-            <p className="text-sm" style={{ color: textMuted }}>
-              Les rapports d'audit — deux versions : DGAC et PART.
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm" style={{ color: textMuted }}>
+                Les rapports d'audit — deux versions : DGAC et PART.
+              </p>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    setReportFormData({
+                      date: new Date().toISOString().split('T')[0],
+                      notes: ""
+                    });
+                    setShowReportDialog(true);
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                >
+                  Generate Reports
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {["DGAC", "PART"].map((v) => {
                 const doc = (audit.reports || []).find((r) => r.version === v);
@@ -632,9 +815,43 @@ export default function AuditDetail({ params }) {
 
         {activeTab === "findingSheets" && (
           <div className="space-y-6">
-            <p className="text-sm" style={{ color: textMuted }}>
-              Les fiches de constat — deux versions : DGAC et PART.
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm" style={{ color: textMuted }}>
+                Les fiches de constat — deux versions : DGAC et PART.
+              </p>
+              {canManage && (
+                <button
+                  onClick={() => {
+                    setFindingSheetFormData({
+                      date: new Date().toISOString().split('T')[0],
+                      notes: "",
+                      referenceDocuments: "",
+                      subject: "",
+                      address: "",
+                      defects: [
+                        { description: "", classification: "minor", deadline: "" }
+                      ],
+                      rootCause: "",
+                      curativeActions: "",
+                      curativeActionDates: "",
+                      actionPlan: "",
+                      actionPlanDate: "",
+                      signatures: [
+                        { name: "", date: "", function: "" },
+                        { name: "", date: "", function: "" },
+                        { name: "", date: "", function: "" },
+                        { name: "", date: "", function: "" }
+                      ]
+                    });
+                    setShowFindingSheetDialog(true);
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                >
+                  Generate Finding Sheets
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {["DGAC", "PART"].map((v) => {
                 const doc = (audit.finding_sheets || []).find(
@@ -654,6 +871,530 @@ export default function AuditDetail({ params }) {
           </div>
         )}
       </div>
+
+      {/* Notification Generation Dialog */}
+      {showNotifyDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowNotifyDialog(false)} />
+          <div className="relative bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Generate Notifications</h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Date de notification</label>
+                    <input
+                      type="date"
+                      value={notifyFormData.date}
+                      onChange={(e) => setNotifyFormData({ ...notifyFormData, date: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Location</label>
+                    <input
+                      type="text"
+                      value={notifyFormData.location}
+                      onChange={(e) => setNotifyFormData({ ...notifyFormData, location: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg"
+                      placeholder="Audit location"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Type d'audit</label>
+                    <input
+                      type="text"
+                      value={notifyFormData.type}
+                      onChange={(e) => setNotifyFormData({ ...notifyFormData, type: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg"
+                      placeholder="Planifié"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Durée de l'audit</label>
+                    <input
+                      type="text"
+                      value={notifyFormData.duration}
+                      onChange={(e) => setNotifyFormData({ ...notifyFormData, duration: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg"
+                      placeholder="Duration"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Référentiels appliqués</label>
+                  <input
+                    type="text"
+                    value={notifyFormData.referentiels}
+                    onChange={(e) => setNotifyFormData({ ...notifyFormData, referentiels: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    placeholder="Référentiels"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Notes</label>
+                  <textarea
+                    value={notifyFormData.notes}
+                    onChange={(e) => setNotifyFormData({ ...notifyFormData, notes: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={3}
+                    placeholder="Additional notes..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Plan d'Audit</label>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Heure</th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Activité / Processus audité</th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Auditeur</th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Observations</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {notifyFormData.auditPlan.map((item, index) => (
+                          <tr key={index} className="border-t">
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={item.time}
+                                onChange={(e) => {
+                                  const newPlan = [...notifyFormData.auditPlan];
+                                  newPlan[index].time = e.target.value;
+                                  setNotifyFormData({ ...notifyFormData, auditPlan: newPlan });
+                                }}
+                                className="w-full px-2 py-1 border rounded text-sm"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={item.activity}
+                                onChange={(e) => {
+                                  const newPlan = [...notifyFormData.auditPlan];
+                                  newPlan[index].activity = e.target.value;
+                                  setNotifyFormData({ ...notifyFormData, auditPlan: newPlan });
+                                }}
+                                className="w-full px-2 py-1 border rounded text-sm"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={item.auditor}
+                                onChange={(e) => {
+                                  const newPlan = [...notifyFormData.auditPlan];
+                                  newPlan[index].auditor = e.target.value;
+                                  setNotifyFormData({ ...notifyFormData, auditPlan: newPlan });
+                                }}
+                                className="w-full px-2 py-1 border rounded text-sm"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={item.observations}
+                                onChange={(e) => {
+                                  const newPlan = [...notifyFormData.auditPlan];
+                                  newPlan[index].observations = e.target.value;
+                                  setNotifyFormData({ ...notifyFormData, auditPlan: newPlan });
+                                }}
+                                className="w-full px-2 py-1 border rounded text-sm"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => previewNotification('DGAC')}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300"
+                >
+                  Preview DGAC
+                </button>
+                <button
+                  onClick={() => previewNotification('PART')}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300"
+                >
+                  Preview PART
+                </button>
+              </div>
+              {previewHtml && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Preview: {previewVersion}</span>
+                    <button
+                      onClick={() => setPreviewHtml(null)}
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      Close Preview
+                    </button>
+                  </div>
+                  <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
+                    <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowNotifyDialog(false)}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={sendNotification}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Generation Dialog */}
+      {showReportDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowReportDialog(false)} />
+          <div className="relative bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Generate Reports</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={reportFormData.date}
+                    onChange={(e) => setReportFormData({ ...reportFormData, date: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Notes</label>
+                  <textarea
+                    value={reportFormData.notes}
+                    onChange={(e) => setReportFormData({ ...reportFormData, notes: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={3}
+                    placeholder="Additional notes..."
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => previewReport('DGAC')}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300"
+                >
+                  Preview DGAC
+                </button>
+                <button
+                  onClick={() => previewReport('PART')}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300"
+                >
+                  Preview PART
+                </button>
+              </div>
+              {previewHtml && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Preview: {previewVersion}</span>
+                    <button
+                      onClick={() => setPreviewHtml(null)}
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      Close Preview
+                    </button>
+                  </div>
+                  <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
+                    <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowReportDialog(false)}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={generateReport}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Finding Sheet Generation Dialog */}
+      {showFindingSheetDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowFindingSheetDialog(false)} />
+          <div className="relative bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Generate Finding Sheets</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={findingSheetFormData.date}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, date: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Documents de référence</label>
+                  <textarea
+                    value={findingSheetFormData.referenceDocuments}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, referenceDocuments: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={2}
+                    placeholder="Liste des documents de référence..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sujet</label>
+                  <input
+                    type="text"
+                    value={findingSheetFormData.subject}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, subject: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    placeholder="Sujet de la fiche de constat"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Adresse</label>
+                  <input
+                    type="text"
+                    value={findingSheetFormData.address}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, address: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    placeholder="Adresse du site audité"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Défauts</label>
+                  {findingSheetFormData.defects.map((defect, index) => (
+                    <div key={index} className="border rounded-lg p-3 mb-2 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Défaut #{index + 1}</span>
+                        {findingSheetFormData.defects.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newDefects = findingSheetFormData.defects.filter((_, i) => i !== index);
+                              setFindingSheetFormData({ ...findingSheetFormData, defects: newDefects });
+                            }}
+                            className="text-red-600 text-sm"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                      <textarea
+                        value={defect.description}
+                        onChange={(e) => {
+                          const newDefects = [...findingSheetFormData.defects];
+                          newDefects[index].description = e.target.value;
+                          setFindingSheetFormData({ ...findingSheetFormData, defects: newDefects });
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg"
+                        rows={2}
+                        placeholder="Description du défaut"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          value={defect.classification}
+                          onChange={(e) => {
+                            const newDefects = [...findingSheetFormData.defects];
+                            newDefects[index].classification = e.target.value;
+                            setFindingSheetFormData({ ...findingSheetFormData, defects: newDefects });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg"
+                        >
+                          <option value="minor">Mineur</option>
+                          <option value="major">Majeur</option>
+                        </select>
+                        <input
+                          type="date"
+                          value={defect.deadline}
+                          onChange={(e) => {
+                            const newDefects = [...findingSheetFormData.defects];
+                            newDefects[index].deadline = e.target.value;
+                            setFindingSheetFormData({ ...findingSheetFormData, defects: newDefects });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setFindingSheetFormData({
+                      ...findingSheetFormData,
+                      defects: [...findingSheetFormData.defects, { description: "", classification: "minor", deadline: "" }]
+                    })}
+                    className="text-sm text-blue-600"
+                  >
+                    + Ajouter un défaut
+                  </button>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Cause racine du défaut</label>
+                  <textarea
+                    value={findingSheetFormData.rootCause}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, rootCause: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={3}
+                    placeholder="Analyse de la cause racine..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Actions curatives</label>
+                  <textarea
+                    value={findingSheetFormData.curativeActions}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, curativeActions: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={3}
+                    placeholder="Actions curatives proposées..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Date des actions curatives</label>
+                  <input
+                    type="date"
+                    value={findingSheetFormData.curativeActionDates}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, curativeActionDates: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Plan d'action</label>
+                  <textarea
+                    value={findingSheetFormData.actionPlan}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, actionPlan: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={3}
+                    placeholder="Plan d'action détaillé..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Date du plan d'action</label>
+                  <input
+                    type="date"
+                    value={findingSheetFormData.actionPlanDate}
+                    onChange={(e) => setFindingSheetFormData({ ...findingSheetFormData, actionPlanDate: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Signatures</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {findingSheetFormData.signatures.map((sig, index) => (
+                      <div key={index} className="border rounded-lg p-3 space-y-2">
+                        <span className="text-sm font-medium">Signature #{index + 1}</span>
+                        <input
+                          type="text"
+                          value={sig.name}
+                          onChange={(e) => {
+                            const newSignatures = [...findingSheetFormData.signatures];
+                            newSignatures[index].name = e.target.value;
+                            setFindingSheetFormData({ ...findingSheetFormData, signatures: newSignatures });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          placeholder="Nom"
+                        />
+                        <input
+                          type="date"
+                          value={sig.date}
+                          onChange={(e) => {
+                            const newSignatures = [...findingSheetFormData.signatures];
+                            newSignatures[index].date = e.target.value;
+                            setFindingSheetFormData({ ...findingSheetFormData, signatures: newSignatures });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={sig.function}
+                          onChange={(e) => {
+                            const newSignatures = [...findingSheetFormData.signatures];
+                            newSignatures[index].function = e.target.value;
+                            setFindingSheetFormData({ ...findingSheetFormData, signatures: newSignatures });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          placeholder="Fonction"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => previewFindingSheet('DGAC')}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300"
+                >
+                  Preview DGAC
+                </button>
+                <button
+                  onClick={() => previewFindingSheet('PART')}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300"
+                >
+                  Preview PART
+                </button>
+              </div>
+              {previewHtml && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Preview: {previewVersion}</span>
+                    <button
+                      onClick={() => setPreviewHtml(null)}
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      Close Preview
+                    </button>
+                  </div>
+                  <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
+                    <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowFindingSheetDialog(false)}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={generateFindingSheet}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

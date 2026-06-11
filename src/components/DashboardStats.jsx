@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 function delta(current, previous) {
   if (previous === 0) return current > 0 ? 100 : 0;
   return Math.round(((current - previous) / previous) * 100);
@@ -38,7 +37,6 @@ function DeltaBadge({ current, previous, invert = false }) {
   const isUp = pct > 0;
   const isDown = pct < 0;
   const neutral = pct === 0;
-  // for "invert" metrics (e.g. incidents – lower is better)
   const positive = invert ? isDown : isUp;
   const negative = invert ? isUp : isDown;
 
@@ -174,7 +172,6 @@ const SEVERITY_LABELS = {
   minor: "Mineur",
 };
 
-// Custom tooltip for recharts
 function ChartTooltip({ active, payload, label, isDark }) {
   if (!active || !payload || !payload.length) return null;
   const bg = isDark ? "#1F2937" : "#FFFFFF";
@@ -207,7 +204,6 @@ function ChartTooltip({ active, payload, label, isDark }) {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
 export default function DashboardStats() {
   const { theme } = useApp();
   const isDark = theme === "dark";
@@ -269,7 +265,6 @@ export default function DashboardStats() {
   const { audits, issues, findings, trend, meta } = stats;
   const isYear = activeTab === "year";
 
-  // Derived values for the active tab
   const auditCurrent = isYear ? audits.thisYear : audits.thisMonth;
   const auditPrevious = isYear ? audits.lastYear : audits.lastMonth;
   const issueCurrent = isYear ? issues.thisYear : issues.thisMonth;
@@ -278,11 +273,9 @@ export default function DashboardStats() {
     ? `${meta.lastYear}`
     : new Date(0, meta.lastMonth - 1).toLocaleString("fr", { month: "long" });
 
-  // Completion rate
   const completionRate =
     auditCurrent > 0 ? Math.round((audits.completed / auditCurrent) * 100) : 0;
 
-  // Open issues
   const openIssues = (issues.byStatus || [])
     .filter((s) =>
       ["submitted", "under_review", "action_assigned"].includes(s.status)
@@ -292,7 +285,6 @@ export default function DashboardStats() {
     ? Math.max(0, Math.round(openIssues * 1.15))
     : Math.max(0, Math.round(openIssues * 1.1));
 
-  // Pie data
   const auditPieData = (audits.byStatus || []).map((s) => ({
     name: STATUS_LABELS[s.status] || s.status,
     value: s.count,
