@@ -10,7 +10,8 @@ function isDevIframe() {
 function devSocialShim(provider, callbackUrl) {
   const params = new URLSearchParams({ provider });
   if (callbackUrl) params.set('callbackUrl', callbackUrl);
-  window.location.href = '/__create/social-dev-shim?' + params;
+  // Dev shim no longer available after folder deletion
+  console.warn('Dev social shim not available');
 }
 
 function useAuth() {

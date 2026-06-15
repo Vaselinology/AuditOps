@@ -3,7 +3,12 @@ import sql from "@/app/api/utils/sql";
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
-    await sql`DELETE FROM programme_slots WHERE id = ${id}`;
+    const { error } = await sql
+      .from('programme_slots')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
     return Response.json({ success: true });
   } catch (error) {
     console.error("Error deleting slot:", error);

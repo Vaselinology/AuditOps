@@ -5,16 +5,9 @@ import { useApp } from "@/contexts/AppContext";
 import AppShell from "@/components/AppShell";
 import { Plus, Trash2, X, Download, CheckCircle, Eye } from "lucide-react";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper: build the HTML for one notification document (used for preview + PDF)
-// ─────────────────────────────────────────────────────────────────────────────
 function buildNotificationHtml({ audit, docNumber, recipientIndex, users }) {
   const date = audit.planned_date
-    ? new Date(audit.planned_date).toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      })
+    ? new Date(audit.planned_date).toLocaleDateString("fr-FR", {day: "2-digit", month: "long", year: "numeric"})
     : new Date().toLocaleDateString("fr-FR", {
         day: "2-digit",
         month: "long",

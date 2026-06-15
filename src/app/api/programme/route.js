@@ -54,13 +54,7 @@ export async function POST(request) {
 
     const { data: row } = await supabaseServer
       .from('programme_rows')
-      .insert({
-        plan_id,
-        year,
-        domain,
-        referentiel,
-        sort_order
-      })
+      .insert({plan_id, year, domain, referentiel,sort_order})
       .select()
       .single();
 

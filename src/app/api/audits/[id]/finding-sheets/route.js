@@ -46,16 +46,25 @@ export async function POST(request, { params }) {
       const year = new Date().getFullYear().toString().slice(-2);
       const refNumber = audit.audit_number ? audit.audit_number.replace('NA-', 'FS-AA-') : `FS-AA-${year}-01`;
       
-      const findingsHTML = audit.findings?.map((f, index) => `
+      // Generate defects table from form data
+      const defectsHTML = defects?.map((defect, index) => `
         <tr>
-          <td style="padding:8px 12px;border:1px solid #ddd;">${f.finding_number}</td>
-          <td style="padding:8px 12px;border:1px solid #ddd;">${f.title}</td>
-          <td style="padding:8px 12px;border:1px solid #ddd;">${f.description}</td>
-          <td style="padding:8px 12px;border:1px solid #ddd;">${f.severity.toUpperCase()}</td>
-          <td style="padding:8px 12px;border:1px solid #ddd;">${f.deadline ? new Date(f.deadline).toLocaleDateString('fr-FR') : '—'}</td>
-          <td style="padding:8px 12px;border:1px solid #ddd;">${f.users ? `${f.users.first_name} ${f.users.last_name}` : '—'}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${index + 1}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${defect.description || '—'}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${defect.classification === 'major' ? 'Majeur' : 'Mineur'}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${defect.deadline ? new Date(defect.deadline).toLocaleDateString('fr-FR') : '—'}</td>
         </tr>
-      `).join('') || '<tr><td colspan="6" style="padding:8px 12px;border:1px solid #ddd;text-align:center;">Aucun constat</td></tr>';
+      `).join('') || '<tr><td colspan="4" style="padding:8px 12px;border:1px solid #ddd;text-align:center;">Aucun défaut</td></tr>';
+      
+      // Generate signatures HTML
+      const signaturesHTML = signatures?.map((sig, index) => `
+        <div class="sig-block">
+          <div class="sig-name">${sig.name || '—'}</div>
+          <div class="sig-date">${sig.date ? new Date(sig.date).toLocaleDateString('fr-FR') : '—'}</div>
+          <div class="sig-function">${sig.function || '—'}</div>
+          <div class="sig-line"></div>
+        </div>
+      `).join('') || '';
 
       return `
 <!DOCTYPE html>
@@ -90,10 +99,16 @@ export async function POST(request, { params }) {
     .findings-table td { border:1px solid #ddd; font-size:10pt; }
     .findings-table tr:nth-child(even) td { background:#fafafa; }
 
+    /* ── Text areas ── */
+    .text-area { border:1px solid #ccc; padding:10px; min-height:60px; font-size:10pt; background:#fafafa; margin-bottom:15px; }
+
     /* ── Signatures ── */
-    .signatures { display:flex; gap:40px; margin-top:36px; }
-    .sig-block  { flex:1; text-align:center; }
-    .sig-line   { border-top:1px solid #999; margin-top:40px; padding-top:6px; font-size:9pt; color:#555; }
+    .signatures { display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-top:36px; }
+    .sig-block  { text-align:center; }
+    .sig-name { font-weight:600; font-size:10pt; margin-bottom:4px; }
+    .sig-date { font-size:9pt; color:#666; margin-bottom:4px; }
+    .sig-function { font-size:9pt; color:#666; margin-bottom:20px; }
+    .sig-line   { border-top:1px solid #999; padding-top:6px; font-size:9pt; color:#555; }
 
     /* ── Footer ── */
     .footer { margin-top:28px; padding-top:12px; border-top:1px solid #ddd; font-size:8pt; color:#888; text-align:center; }
@@ -129,35 +144,56 @@ export async function POST(request, { params }) {
     <tr><td>Titre de l'audit</td><td>${audit.title || '—'}</td></tr>
     <tr><td>Département</td><td>${audit.department || '—'}</td></tr>
     <tr><td>Auditeur</td><td>${audit.users ? `${audit.users.first_name} ${audit.users.last_name}` : '—'}</td></tr>
-    ${notes ? `<tr><td>Notes</td><td>${notes}</td></tr>` : ''}
+    ${subject ? `<tr><td>Sujet</td><td>${subject}</td></tr>` : ''}
+    ${address ? `<tr><td>Adresse</td><td>${address}</td></tr>` : ''}
   </table>
 
-  <!-- ── Findings ── -->
-  <div class="section-title">Constats (${audit.findings?.length || 0})</div>
+  ${referenceDocuments ? `
+  <!-- ── Reference Documents ── -->
+  <div class="section-title">Documents de référence</div>
+  <div class="text-area">${referenceDocuments}</div>
+  ` : ''}
+
+  <!-- ── Defects ── -->
+  <div class="section-title">Défauts (${defects?.length || 0})</div>
   <table class="findings-table">
     <thead>
       <tr>
-        <th style="width:12%">Numéro</th>
-        <th style="width:22%">Titre</th>
-        <th style="width:28%">Description</th>
-        <th style="width:12%">Sévérité</th>
-        <th style="width:16%">Échéance</th>
-        <th style="width:10%">Assigné à</th>
+        <th style="width:10%">N°</th>
+        <th style="width:45%">Description</th>
+        <th style="width:20%">Classification</th>
+        <th style="width:25%">Échéance</th>
       </tr>
     </thead>
     <tbody>
-      ${findingsHTML}
+      ${defectsHTML}
     </tbody>
   </table>
 
+  ${rootCause ? `
+  <!-- ── Root Cause ── -->
+  <div class="section-title">Cause racine du défaut</div>
+  <div class="text-area">${rootCause}</div>
+  ` : ''}
+
+  ${curativeActions ? `
+  <!-- ── Curative Actions ── -->
+  <div class="section-title">Actions curatives</div>
+  <div class="text-area">${curativeActions}</div>
+  ${curativeActionDates ? `<p style="font-size:10pt;margin-bottom:15px;"><strong>Date des actions curatives:</strong> ${curativeActionDates ? new Date(curativeActionDates).toLocaleDateString('fr-FR') : '—'}</p>` : ''}
+  ` : ''}
+
+  ${actionPlan ? `
+  <!-- ── Action Plan ── -->
+  <div class="section-title">Plan d'action</div>
+  <div class="text-area">${actionPlan}</div>
+  ${actionPlanDate ? `<p style="font-size:10pt;margin-bottom:15px;"><strong>Date du plan d'action:</strong> ${actionPlanDate ? new Date(actionPlanDate).toLocaleDateString('fr-FR') : '—'}</p>` : ''}
+  ` : ''}
+
   <!-- ── Signatures ── -->
+  <div class="section-title">Signatures</div>
   <div class="signatures">
-    <div class="sig-block">
-      <div class="sig-line">Responsable Audit<br/>${audit.users ? `${audit.users.first_name} ${audit.users.last_name}` : '—'}</div>
-    </div>
-    <div class="sig-block">
-      <div class="sig-line">Direction Qualité</div>
-    </div>
+    ${signaturesHTML}
   </div>
 
   <!-- ── Footer ── -->

@@ -29,14 +29,21 @@ export default defineConfig({
       '@auth/core/errors',
       'fsevents',
       'lightningcss',
+      'playwright',
+      'playwright-core',
+      'chromium-bidi',
     ],
+  },
+  ssr: {
+    noExternal: ['@hono/auth-js/react', '@hono/auth-js', '@auth/core'],
+    external: ['playwright', 'playwright-core', 'chromium-bidi'],
   },
   logLevel: 'info',
   plugins: [
     nextPublicProcessEnv(),
     restartEnvFileChange(),
     reactRouterHonoServer({
-      serverEntryPoint: './__create/index.ts',
+      serverEntryPoint: './route-utils/index.ts',
       runtime: 'node',
     }),
     babel({
@@ -73,10 +80,7 @@ export default defineConfig({
   resolve: {
     alias: {
       lodash: 'lodash-es',
-      // Keep local shim under a distinct name to avoid shadowing the npm package
-      'local-stripe': path.resolve(__dirname, './src/__create/stripe'),
       '@auth/create/react': '@hono/auth-js/react',
-      '@auth/create': path.resolve(__dirname, './src/__create/@auth/create'),
       '@': path.resolve(__dirname, 'src'),
     },
     dedupe: ['react', 'react-dom'],

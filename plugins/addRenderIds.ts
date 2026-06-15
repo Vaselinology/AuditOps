@@ -89,27 +89,28 @@ const getRenderIdVisitor =
           idToJsx.current[renderId] = { code: path.getSource() };
 
           const body = program.get('body') as any;
-          const alreadyImported =
-            Array.isArray(body) &&
-            body.some(
-              (p: any) =>
-                t.isImportDeclaration(p.node) &&
-                p.node.source.value === '@/__create/PolymorphicComponent'
-            );
-          if (!alreadyImported) {
-            const importDecl = t.importDeclaration(
-              [t.importDefaultSpecifier(t.identifier('CreatePolymorphicComponent'))],
-              t.stringLiteral('@/__create/PolymorphicComponent')
-            );
-            const firstImport = Array.isArray(body)
-              ? body.findIndex((p: any) => p.isImportDeclaration())
-              : -1;
-            if (firstImport === -1) {
-              (program.node as any).body.unshift(importDecl);
-            } else {
-              (body as any[])[firstImport].insertBefore(importDecl);
-            }
-          }
+          // PolymorphicComponent import removed after folder deletion
+          // const alreadyImported =
+          //   Array.isArray(body) &&
+          //   body.some(
+          //     (p: any) =>
+          //       t.isImportDeclaration(p.node) &&
+          //       p.node.source.value === '@/error/PolymorphicComponent'
+          //   );
+          // if (!alreadyImported) {
+          //   const importDecl = t.importDeclaration(
+          //     [t.importDefaultSpecifier(t.identifier('CreatePolymorphicComponent'))],
+          //     t.stringLiteral('@/error/PolymorphicComponent')
+          //   );
+          //   const firstImport = Array.isArray(body)
+          //     ? body.findIndex((p: any) => p.isImportDeclaration())
+          //     : -1;
+          //   if (firstImport === -1) {
+          //     (program.node as any).body.unshift(importDecl);
+          //   } else {
+          //     (body as any[])[firstImport].insertBefore(importDecl);
+          //   }
+          // }
 
           // Clone existing attributes and add our own
           const newAttributes = [
@@ -118,23 +119,27 @@ const getRenderIdVisitor =
             t.jsxAttribute(t.jsxIdentifier('as'), t.stringLiteral(tagName)),
           ];
 
-          const newOpening = t.jsxOpeningElement(
-            t.jsxIdentifier('CreatePolymorphicComponent'),
-            newAttributes,
-            opening.selfClosing
-          );
-          const newClosing = opening.selfClosing
-            ? null
-            : t.jsxClosingElement(t.jsxIdentifier('CreatePolymorphicComponent'));
+          // PolymorphicComponent wrapping removed after folder deletion
+          // const newOpening = t.jsxOpeningElement(
+          //   t.jsxIdentifier('CreatePolymorphicComponent'),
+          //   newAttributes,
+          //   opening.selfClosing
+          // );
+          // const newClosing = opening.selfClosing
+          //   ? null
+          //   : t.jsxClosingElement(t.jsxIdentifier('CreatePolymorphicComponent'));
 
-          const wrapped = t.jsxElement(
-            newOpening,
-            newClosing,
-            path.node.children,
-            opening.selfClosing
-          );
+          // const wrapped = t.jsxElement(
+          //   newOpening,
+          //   newClosing,
+          //   path.node.children,
+          //   opening.selfClosing
+          // );
 
-          path.replaceWith(wrapped);
+          // path.replaceWith(wrapped);
+          
+          // Just add attributes without wrapping since PolymorphicComponent doesn't exist
+          opening.attributes = newAttributes;
         },
       },
     };

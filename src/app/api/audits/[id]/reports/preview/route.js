@@ -4,7 +4,7 @@ export async function POST(request, { params }) {
   try {
     const { id } = params;
     const body = await request.json();
-    const { date, notes } = body || {};
+    const { date, notes, auditPlan, references, distribution, checkPoints, strengthPoints, weakness, auditResults, signatures } = body || {};
 
     const { data: audit, error: auditError } = await supabaseServer
       .from('audits')
@@ -40,6 +40,47 @@ export async function POST(request, { params }) {
       // Generate reference number in RA-YY-** format
       const year = new Date().getFullYear().toString().slice(-2);
       const refNumber = audit.audit_number ? audit.audit_number.replace('NA-', 'RA-') : `RA-${year}-01`;
+      
+      // Generate audit plan HTML
+      const auditPlanHTML = auditPlan ? `
+        <tr><td>Auditeur(s)</td><td>${auditPlan.auditors?.filter(a => a).join(', ') || '—'}</td></tr>
+        <tr><td>Audité(s)</td><td>${auditPlan.auditees?.filter(a => a).join(', ') || '—'}</td></tr>
+        <tr><td>Auditeur(s) principal(aux)</td><td>${auditPlan.leadAuditors?.filter(a => a).join(', ') || '—'}</td></tr>
+        <tr><td>Représentant(s) de l'audité</td><td>${auditPlan.representatives?.filter(a => a).join(', ') || '—'}</td></tr>
+      ` : '';
+      
+      // Generate distribution HTML
+      const distributionHTML = distribution && distribution.length > 0 ? distribution.join(', ') : '—';
+      
+      // Generate check points HTML
+      const checkPointsHTML = checkPoints?.map((cp, index) => `
+        <tr>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${index + 1}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${cp.verified || '—'}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${cp.remarks || '—'}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="3" style="padding:8px 12px;border:1px solid #ddd;text-align:center;">Aucun point de contrôle</td></tr>';
+      
+      // Generate audit results HTML
+      const auditResultsHTML = auditResults?.map((ar, index) => `
+        <tr>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${index + 1}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${ar.item || '—'}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${ar.defectDescription || '—'}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${ar.classification === 'major' ? 'Majeur' : 'Mineur'}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;">${ar.deadline ? new Date(ar.deadline).toLocaleDateString('fr-FR') : '—'}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="5" style="padding:8px 12px;border:1px solid #ddd;text-align:center;">Aucun résultat</td></tr>';
+      
+      // Generate signatures HTML
+      const signaturesHTML = signatures?.map((sig, index) => `
+        <div class="sig-box">
+          <div class="sig-name">${sig.name || '—'}</div>
+          <div class="sig-date">${sig.date ? new Date(sig.date).toLocaleDateString('fr-FR') : '—'}</div>
+          <div class="sig-function">${sig.function || '—'}</div>
+          <div class="sig-line"></div>
+        </div>
+      `).join('') || '';
       
       const findingsHTML = audit.findings?.map(f => `
         <tr>
@@ -84,10 +125,16 @@ export async function POST(request, { params }) {
     .findings-table td { border:1px solid #ddd; font-size:10pt; }
     .findings-table tr:nth-child(even) td { background:#fafafa; }
 
+    /* ── Text areas ── */
+    .text-area { border:1px solid #ccc; padding:10px; min-height:60px; font-size:10pt; background:#fafafa; margin-bottom:15px; }
+
     /* ── Signatures ── */
-    .signatures { display:flex; gap:40px; margin-top:36px; }
-    .sig-block  { flex:1; text-align:center; }
-    .sig-line   { border-top:1px solid #999; margin-top:40px; padding-top:6px; font-size:9pt; color:#555; }
+    .signatures { display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-top:36px; }
+    .sig-box { border:1px solid #ccc; padding:15px; min-height:100px; text-align:center; }
+    .sig-name { font-weight:600; font-size:10pt; margin-bottom:4px; }
+    .sig-date { font-size:9pt; color:#666; margin-bottom:4px; }
+    .sig-function { font-size:9pt; color:#666; margin-bottom:20px; }
+    .sig-line { border-top:1px solid #999; padding-top:6px; font-size:9pt; color:#555; }
 
     /* ── Footer ── */
     .footer { margin-top:28px; padding-top:12px; border-top:1px solid #ddd; font-size:8pt; color:#888; text-align:center; }
@@ -133,31 +180,74 @@ export async function POST(request, { params }) {
     ${audit.description || 'Aucune description'}
   </div>
 
-  <!-- ── Findings ── -->
-  <div class="section-title">Constats (${audit.findings?.length || 0})</div>
+  ${auditPlanHTML ? `
+  <!-- ── Audit Plan ── -->
+  <div class="section-title">Plan d'audit</div>
+  <table class="info-table">
+    ${auditPlanHTML}
+  </table>
+  ` : ''}
+
+  ${references ? `
+  <!-- ── References ── -->
+  <div class="section-title">Références</div>
+  <div class="text-area">${references}</div>
+  ` : ''}
+
+  ${distribution && distribution.length > 0 ? `
+  <!-- ── Distribution ── -->
+  <div class="section-title">Distribution</div>
+  <div style="margin-bottom:20px;font-size:10pt;">${distributionHTML}</div>
+  ` : ''}
+
+  <!-- ── Check Points ── -->
+  <div class="section-title">Points de contrôle</div>
   <table class="findings-table">
     <thead>
       <tr>
-        <th style="width:15%">Numéro</th>
-        <th style="width:30%">Titre</th>
-        <th style="width:15%">Sévérité</th>
-        <th style="width:20%">Échéance</th>
-        <th style="width:20%">Assigné à</th>
+        <th style="width:10%">N°</th>
+        <th style="width:45%">Points vérifiés</th>
+        <th style="width:45%">Remarques</th>
       </tr>
     </thead>
     <tbody>
-      ${findingsHTML}
+      ${checkPointsHTML}
+    </tbody>
+  </table>
+
+  ${strengthPoints ? `
+  <!-- ── Strength Points ── -->
+  <div class="section-title">Points forts</div>
+  <div class="text-area">${strengthPoints}</div>
+  ` : ''}
+
+  ${weakness ? `
+  <!-- ── Weakness ── -->
+  <div class="section-title">Faiblesses</div>
+  <div class="text-area">${weakness}</div>
+  ` : ''}
+
+  <!-- ── Audit Results ── -->
+  <div class="section-title">Résultats de l'audit</div>
+  <table class="findings-table">
+    <thead>
+      <tr>
+        <th style="width:10%">N°</th>
+        <th style="width:25%">Élément</th>
+        <th style="width:30%">Description du défaut</th>
+        <th style="width:15%">Classification</th>
+        <th style="width:20%">Échéance</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${auditResultsHTML}
     </tbody>
   </table>
 
   <!-- ── Signatures ── -->
+  <div class="section-title">Signatures</div>
   <div class="signatures">
-    <div class="sig-block">
-      <div class="sig-line">Responsable Audit<br/>${audit.users ? `${audit.users.first_name} ${audit.users.last_name}` : '—'}</div>
-    </div>
-    <div class="sig-block">
-      <div class="sig-line">Direction Qualité</div>
-    </div>
+    ${signaturesHTML}
   </div>
 
   <!-- ── Footer ── -->

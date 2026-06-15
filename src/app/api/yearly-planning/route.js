@@ -5,11 +5,13 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const year = searchParams.get("year") || new Date().getFullYear();
 
-    const planning = await sql`
-      SELECT * FROM yearly_planning 
-      WHERE year = ${year}
-      ORDER BY planned_month ASC
-    `;
+    const { data: planning, error } = await sql
+      .from('yearly_planning')
+      .select('*')
+      .eq('year', year)
+      .order('planned_month', { ascending: true });
+
+    if (error) throw error;
 
     return Response.json({ planning });
   } catch (error) {
@@ -33,13 +35,21 @@ export async function POST(request) {
       notes,
     } = body;
 
-    const result = await sql`
-      INSERT INTO yearly_planning (year, department, planned_audit_title, planned_quarter, planned_month, notes)
-      VALUES (${year}, ${department || null}, ${planned_audit_title}, ${planned_quarter || null}, ${planned_month || null}, ${notes || null})
-      RETURNING *
-    `;
+    const { data, error } = await sql
+      .from('yearly_planning')
+      .insert({
+        year,
+        department: department || null,
+        planned_audit_title,
+        planned_quarter: planned_quarter || null,
+        planned_month: planned_month || null,
+        notes: notes || null
+      })
+      .select();
 
-    return Response.json({ plan: result[0] }, { status: 201 });
+    if (error) throw error;
+
+    return Response.json({ plan: data[0] }, { status: 201 });
   } catch (error) {
     console.error("Error creating yearly plan:", error);
     return Response.json(

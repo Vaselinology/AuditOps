@@ -261,6 +261,10 @@ export function AppProvider({ children }) {
         en: "Issue Details",
         fr: "Détails du signalement",
       },
+      "admin.issues.details": { en: "Details", fr: "Détails" },
+      "admin.issues.risk": { en: "Initial Risk", fr: "Risque initial" },
+      "admin.issues.followup": { en: "Follow-up", fr: "Suivi" },
+      "admin.issues.report": { en: "Report", fr: "Rapport" },
       "admin.issues.select": {
         en: "Select an issue to review",
         fr: "Sélectionnez un signalement",

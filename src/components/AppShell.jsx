@@ -153,12 +153,14 @@ export default function AppShell({ title, actions, children }) {
           gap: 8,
         }}
       >
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
-          style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
-        >
-          AO
-        </div>
+        {!currentPath?.startsWith("/audits") && (
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
+            style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+          >
+            AO
+          </div>
+        )}
         {!collapsed && (
           <span
             className="font-semibold text-sm flex-1 truncate"

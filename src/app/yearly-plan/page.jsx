@@ -101,6 +101,9 @@ export default function YearlyPlan() {
     postponed_month: "",
     postponed_week: "",
   });
+  const [activities, setActivities] = useState([]);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [selectedActivities, setSelectedActivities] = useState([]);
 
   const isDark = theme === "dark";
   const bg = isDark ? "#111827" : "#FFFFFF";
@@ -123,6 +126,18 @@ export default function YearlyPlan() {
       console.error(err);
     }
   }, [activePlan, year]);
+
+  const fetchActivities = useCallback(async () => {
+    try {
+      const res = await fetch("/api/activities?type=TAA");
+      if (res.ok) {
+        const data = await res.json();
+        setActivities(data.activities || []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -248,6 +263,56 @@ export default function YearlyPlan() {
     }
   };
 
+  const handleImportActivities = async () => {
+    try {
+      await fetchActivities();
+      setSelectedActivities([]);
+      setShowImportModal(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleImportSelectedActivities = async () => {
+    try {
+      for (const activity of selectedActivities) {
+        await fetch("/api/programme", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan_id: activePlan,
+            year,
+            domain: activity.name || activity.domain || "TAA",
+            referentiel: activity.referentiel || "TAA",
+          }),
+        });
+      }
+      setShowImportModal(false);
+      setSelectedActivities([]);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleActivitySelection = (activity) => {
+    setSelectedActivities((prev) => {
+      if (prev.find((a) => a.id === activity.id)) {
+        return prev.filter((a) => a.id !== activity.id);
+      } else {
+        return [...prev, activity];
+      }
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedActivities.length === activities.length) {
+      setSelectedActivities([]);
+    } else {
+      setSelectedActivities(activities);
+    }
+  };
+
   const plans = [
     { id: 1, label: "Programme d'audit interne 1" },
     { id: 2, label: "Programme d'audit interne 2" },
@@ -284,6 +349,13 @@ export default function YearlyPlan() {
       >
         <Plus size={15} />
         <span className="hidden sm:inline">Ajouter une ligne</span>
+      </button>
+      <button
+        onClick={handleImportActivities}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border"
+        style={{ borderColor, color: textPrimary }}
+      >
+        <span className="hidden sm:inline">Importer activités TAA</span>
       </button>
     </div>
   );
@@ -852,6 +924,100 @@ export default function YearlyPlan() {
                 >
                   Ajouter
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Import Activities Modal ── */}
+      {showImportModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowImportModal(false)}
+        >
+          <div
+            className="rounded-xl border p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+            style={{ backgroundColor: bg, borderColor }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold" style={{ color: textPrimary }}>
+                Importer activités TAA
+              </h3>
+              <button
+                onClick={() => setShowImportModal(false)}
+                style={{ color: textMuted }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {activities.length === 0 ? (
+                <p className="text-sm" style={{ color: textMuted }}>
+                  Aucune activité TAA trouvée dans la base de données.
+                </p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm" style={{ color: textMuted }}>
+                      Sélectionnez les activités à importer:
+                    </p>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: textPrimary }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedActivities.length === activities.length && activities.length > 0}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4"
+                      />
+                      Tout sélectionner
+                    </label>
+                  </div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {activities.map((activity) => (
+                      <label
+                        key={activity.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                        style={{ borderColor }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedActivities.find((a) => a.id === activity.id)}
+                          onChange={() => toggleActivitySelection(activity)}
+                          className="w-4 h-4"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm" style={{ color: textPrimary }}>
+                            {activity.name || activity.domain || "Activité"}
+                          </div>
+                          {activity.referentiel && (
+                            <div className="text-xs" style={{ color: textMuted }}>
+                              Référentiel: {activity.referentiel}
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium"
+                  style={{ borderColor, color: textPrimary }}
+                >
+                  Annuler
+                </button>
+                {selectedActivities.length > 0 && (
+                  <button
+                    onClick={handleImportSelectedActivities}
+                    className="px-4 py-2 rounded-lg text-sm font-medium"
+                    style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+                  >
+                    Importer ({selectedActivities.length})
+                  </button>
+                )}
               </div>
             </div>
           </div>

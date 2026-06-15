@@ -61,11 +61,11 @@ export default function Login() {
             className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
             style={{ backgroundColor: "#CC0000", color: "#FFFFFF" }}
           >
-            TA
+            TT
           </div>
           <div>
             <p className="font-bold text-white text-lg leading-tight">
-              Tunisair
+              Tunisair Technics
             </p>
             <p className="text-xs leading-tight" style={{ color: "#94A3B8" }}>
               Direction Assurance Qualité et Sécurité
@@ -100,11 +100,7 @@ export default function Login() {
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "Audits suivis", value: "100%" },
-            { label: "Conformité", value: "PART-145" },
-            { label: "Référentiel", value: "DGAC" },
-          ].map(({ label, value }) => (
+          {[{ label: "Confidentialité", value: "100%" }, { label: "Conformité", value: "PART" }, { label: "Référentiel", value: "DGAC" }].map(({ label, value }) => (
             <div
               key={label}
               className="rounded-xl p-4"
@@ -259,27 +255,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          <div
-            className="mt-8 p-4 rounded-xl"
-            style={{ backgroundColor: "#F1F5F9", border: "1px solid #E2E8F0" }}
-          >
-            <p
-              className="text-xs font-semibold mb-2"
-              style={{ color: "#64748B" }}
-            >
-              Compte administrateur par défaut :
-            </p>
-            <div className="space-y-1">
-              <p className="text-xs" style={{ color: "#475569" }}>
-                <span className="font-medium">Email :</span>{" "}
-                Haifa.SDIRI@tunisair.com.tn
-              </p>
-              <p className="text-xs" style={{ color: "#475569" }}>
-                <span className="font-medium">Mot de passe :</span> password
-              </p>
-            </div>
-          </div>
 
           <p className="mt-8 text-center text-xs" style={{ color: "#9CA3AF" }}>
             © {new Date().getFullYear()} Tunisair — Direction Assurance Qualité

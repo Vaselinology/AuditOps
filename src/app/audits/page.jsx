@@ -12,7 +12,6 @@ export default function AuditsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-
   const isDark = theme === "dark";
   const bg = isDark ? "#111827" : "#FFFFFF";
   const bgMuted = isDark ? "#1F2937" : "#F9FAFB";
@@ -20,12 +19,8 @@ export default function AuditsList() {
   const textMuted = isDark ? "#9CA3AF" : "#6B7280";
   const borderColor = isDark ? "#374151" : "#E5E7EB";
 
-  useEffect(() => {
-    fetchAudits();
-  }, []);
-  useEffect(() => {
-    filterAudits();
-  }, [audits, searchTerm, statusFilter, typeFilter]);
+  useEffect(() => {fetchAudits()}, []);
+  useEffect(() => {filterAudits()}, [audits, searchTerm, statusFilter, typeFilter]);
 
   const fetchAudits = async () => {
     try {

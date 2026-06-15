@@ -116,21 +116,11 @@ function RiskMatrix({ selectedP, selectedS, onSelect }) {
   );
 }
 
-function Section({
-  title,
-  icon: Icon,
-  children,
-  bg,
-  borderColor,
-  textPrimary,
-  defaultOpen = true,
-}) {
+function Section({title, icon: Icon, children, bg, borderColor, textPrimary, defaultOpen = true}) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div
-      className="rounded-xl border overflow-hidden"
-      style={{ backgroundColor: bg, borderColor }}
-    >
+    <div className="rounded-xl border overflow-hidden" style={{ backgroundColor: bg, borderColor }}>
+
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -177,7 +167,7 @@ export default function ReportIssue() {
     initial_severity: null,
   };
   const [form, setForm] = useState({ ...blank });
-
+  console.log("form state:", form);
   const isDark = theme === "dark";
   const bg = isDark ? "#111827" : "#FFFFFF";
   const bgMuted = isDark ? "#1F2937" : "#F9FAFB";

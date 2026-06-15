@@ -218,11 +218,11 @@ export default function AuditDetail({ params }) {
     "#6B7280";
 
   const tabs = [
-    { id: "overview", label: t("audit.detail.overview") },
-    { id: "findings", label: t("audit.detail.findings") },
-    { id: "notifications", label: t("audit.detail.notifications") },
-    { id: "reports", label: t("audit.detail.reports") },
-    { id: "findingSheets", label: t("audit.detail.findingSheets") },
+    { id: "overview", label: "Aperçu" },
+    { id: "findings", label: "Constats" },
+    { id: "notifications", label: "Notifications" },
+    { id: "reports", label: "Rapports" },
+    { id: "findingSheets", label: "Fiches de constat" },
   ];
 
   const DocCard = ({ htmlContent, version, filename, label }) => (
@@ -785,7 +785,29 @@ export default function AuditDetail({ params }) {
                   onClick={() => {
                     setReportFormData({
                       date: new Date().toISOString().split('T')[0],
-                      notes: ""
+                      notes: "",
+                      auditPlan: {
+                        auditors: [""],
+                        auditees: [""],
+                        leadAuditors: [""],
+                        representatives: [""]
+                      },
+                      references: "",
+                      distribution: [],
+                      checkPoints: [
+                        { verified: "", remarks: "" }
+                      ],
+                      strengthPoints: "",
+                      weakness: "",
+                      auditResults: [
+                        { item: "", defectDescription: "", classification: "minor", deadline: "" }
+                      ],
+                      signatures: [
+                        { name: "", date: "", function: "" },
+                        { name: "", date: "", function: "" },
+                        { name: "", date: "", function: "" },
+                        { name: "", date: "", function: "" }
+                      ]
                     });
                     setShowReportDialog(true);
                   }}
@@ -1067,7 +1089,7 @@ export default function AuditDetail({ params }) {
       {showReportDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowReportDialog(false)} />
-          <div className="relative bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white rounded-xl shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">Generate Reports</h2>
               <div className="space-y-4">
@@ -1079,6 +1101,407 @@ export default function AuditDetail({ params }) {
                     onChange={(e) => setReportFormData({ ...reportFormData, date: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Plan d'audit</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Auditeur(s)</label>
+                      {reportFormData.auditPlan.auditors.map((auditor, index) => (
+                        <div key={index} className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={auditor}
+                            onChange={(e) => {
+                              const newAuditPlan = { ...reportFormData.auditPlan };
+                              newAuditPlan.auditors[index] = e.target.value;
+                              setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                            }}
+                            className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                            placeholder="Nom de l'auditeur"
+                          />
+                          {reportFormData.auditPlan.auditors.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newAuditPlan = { ...reportFormData.auditPlan };
+                                newAuditPlan.auditors = newAuditPlan.auditors.filter((_, i) => i !== index);
+                                setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                              }}
+                              className="text-red-600 text-sm"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newAuditPlan = { ...reportFormData.auditPlan };
+                          newAuditPlan.auditors = [...newAuditPlan.auditors, ""];
+                          setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                        }}
+                        className="text-sm text-blue-600"
+                      >
+                        + Ajouter auditeur
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Audité(s)</label>
+                      {reportFormData.auditPlan.auditees.map((auditee, index) => (
+                        <div key={index} className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={auditee}
+                            onChange={(e) => {
+                              const newAuditPlan = { ...reportFormData.auditPlan };
+                              newAuditPlan.auditees[index] = e.target.value;
+                              setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                            }}
+                            className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                            placeholder="Nom de l'audité"
+                          />
+                          {reportFormData.auditPlan.auditees.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newAuditPlan = { ...reportFormData.auditPlan };
+                                newAuditPlan.auditees = newAuditPlan.auditees.filter((_, i) => i !== index);
+                                setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                              }}
+                              className="text-red-600 text-sm"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newAuditPlan = { ...reportFormData.auditPlan };
+                          newAuditPlan.auditees = [...newAuditPlan.auditees, ""];
+                          setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                        }}
+                        className="text-sm text-blue-600"
+                      >
+                        + Ajouter audité
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Auditeur(s) principal(aux)</label>
+                      {reportFormData.auditPlan.leadAuditors.map((leadAuditor, index) => (
+                        <div key={index} className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={leadAuditor}
+                            onChange={(e) => {
+                              const newAuditPlan = { ...reportFormData.auditPlan };
+                              newAuditPlan.leadAuditors[index] = e.target.value;
+                              setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                            }}
+                            className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                            placeholder="Nom de l'auditeur principal"
+                          />
+                          {reportFormData.auditPlan.leadAuditors.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newAuditPlan = { ...reportFormData.auditPlan };
+                                newAuditPlan.leadAuditors = newAuditPlan.leadAuditors.filter((_, i) => i !== index);
+                                setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                              }}
+                              className="text-red-600 text-sm"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newAuditPlan = { ...reportFormData.auditPlan };
+                          newAuditPlan.leadAuditors = [...newAuditPlan.leadAuditors, ""];
+                          setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                        }}
+                        className="text-sm text-blue-600"
+                      >
+                        + Ajouter auditeur principal
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Représentant(s) de l'audité</label>
+                      {reportFormData.auditPlan.representatives.map((representative, index) => (
+                        <div key={index} className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={representative}
+                            onChange={(e) => {
+                              const newAuditPlan = { ...reportFormData.auditPlan };
+                              newAuditPlan.representatives[index] = e.target.value;
+                              setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                            }}
+                            className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                            placeholder="Nom du représentant"
+                          />
+                          {reportFormData.auditPlan.representatives.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newAuditPlan = { ...reportFormData.auditPlan };
+                                newAuditPlan.representatives = newAuditPlan.representatives.filter((_, i) => i !== index);
+                                setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                              }}
+                              className="text-red-600 text-sm"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newAuditPlan = { ...reportFormData.auditPlan };
+                          newAuditPlan.representatives = [...newAuditPlan.representatives, ""];
+                          setReportFormData({ ...reportFormData, auditPlan: newAuditPlan });
+                        }}
+                        className="text-sm text-blue-600"
+                      >
+                        + Ajouter représentant
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Références</label>
+                  <textarea
+                    value={reportFormData.references}
+                    onChange={(e) => setReportFormData({ ...reportFormData, references: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={2}
+                    placeholder="Références avec date d'audit..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Distribution</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {["DGTT", "DAQSE", "DM", "DRE", "MCC", "DAA", "DC", "DFT", "DLA", "DVSC", "DCP", "DIT", "DLT"].map((dept) => (
+                      <label key={dept} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={reportFormData.distribution.includes(dept)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setReportFormData({ ...reportFormData, distribution: [...reportFormData.distribution, dept] });
+                            } else {
+                              setReportFormData({ ...reportFormData, distribution: reportFormData.distribution.filter(d => d !== dept) });
+                            }
+                          }}
+                          className="w-4 h-4"
+                        />
+                        {dept}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Points de contrôle</label>
+                  {reportFormData.checkPoints.map((cp, index) => (
+                    <div key={index} className="border rounded-lg p-3 mb-2 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Point #{index + 1}</span>
+                        {reportFormData.checkPoints.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newCheckPoints = reportFormData.checkPoints.filter((_, i) => i !== index);
+                              setReportFormData({ ...reportFormData, checkPoints: newCheckPoints });
+                            }}
+                            className="text-red-600 text-sm"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={cp.verified}
+                          onChange={(e) => {
+                            const newCheckPoints = [...reportFormData.checkPoints];
+                            newCheckPoints[index].verified = e.target.value;
+                            setReportFormData({ ...reportFormData, checkPoints: newCheckPoints });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          placeholder="Points vérifiés"
+                        />
+                        <input
+                          type="text"
+                          value={cp.remarks}
+                          onChange={(e) => {
+                            const newCheckPoints = [...reportFormData.checkPoints];
+                            newCheckPoints[index].remarks = e.target.value;
+                            setReportFormData({ ...reportFormData, checkPoints: newCheckPoints });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          placeholder="Remarques"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setReportFormData({
+                      ...reportFormData,
+                      checkPoints: [...reportFormData.checkPoints, { verified: "", remarks: "" }]
+                    })}
+                    className="text-sm text-blue-600"
+                  >
+                    + Ajouter point de contrôle
+                  </button>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Points forts</label>
+                  <textarea
+                    value={reportFormData.strengthPoints}
+                    onChange={(e) => setReportFormData({ ...reportFormData, strengthPoints: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={3}
+                    placeholder="Points forts identifiés..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Faiblesses</label>
+                  <textarea
+                    value={reportFormData.weakness}
+                    onChange={(e) => setReportFormData({ ...reportFormData, weakness: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    rows={3}
+                    placeholder="Faiblesses identifiées..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Résultats de l'audit</label>
+                  {reportFormData.auditResults.map((ar, index) => (
+                    <div key={index} className="border rounded-lg p-3 mb-2 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Résultat #{index + 1}</span>
+                        {reportFormData.auditResults.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newAuditResults = reportFormData.auditResults.filter((_, i) => i !== index);
+                              setReportFormData({ ...reportFormData, auditResults: newAuditResults });
+                            }}
+                            className="text-red-600 text-sm"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={ar.item}
+                        onChange={(e) => {
+                          const newAuditResults = [...reportFormData.auditResults];
+                          newAuditResults[index].item = e.target.value;
+                          setReportFormData({ ...reportFormData, auditResults: newAuditResults });
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                        placeholder="Élément"
+                      />
+                      <textarea
+                        value={ar.defectDescription}
+                        onChange={(e) => {
+                          const newAuditResults = [...reportFormData.auditResults];
+                          newAuditResults[index].defectDescription = e.target.value;
+                          setReportFormData({ ...reportFormData, auditResults: newAuditResults });
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                        rows={2}
+                        placeholder="Description du défaut"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          value={ar.classification}
+                          onChange={(e) => {
+                            const newAuditResults = [...reportFormData.auditResults];
+                            newAuditResults[index].classification = e.target.value;
+                            setReportFormData({ ...reportFormData, auditResults: newAuditResults });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        >
+                          <option value="minor">Mineur</option>
+                          <option value="major">Majeur</option>
+                        </select>
+                        <input
+                          type="date"
+                          value={ar.deadline}
+                          onChange={(e) => {
+                            const newAuditResults = [...reportFormData.auditResults];
+                            newAuditResults[index].deadline = e.target.value;
+                            setReportFormData({ ...reportFormData, auditResults: newAuditResults });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setReportFormData({
+                      ...reportFormData,
+                      auditResults: [...reportFormData.auditResults, { item: "", defectDescription: "", classification: "minor", deadline: "" }]
+                    })}
+                    className="text-sm text-blue-600"
+                  >
+                    + Ajouter résultat
+                  </button>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Signatures</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {reportFormData.signatures.map((sig, index) => (
+                      <div key={index} className="border rounded-lg p-3 space-y-2">
+                        <span className="text-sm font-medium">Signature #{index + 1}</span>
+                        <input
+                          type="text"
+                          value={sig.name}
+                          onChange={(e) => {
+                            const newSignatures = [...reportFormData.signatures];
+                            newSignatures[index].name = e.target.value;
+                            setReportFormData({ ...reportFormData, signatures: newSignatures });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          placeholder="Nom"
+                        />
+                        <input
+                          type="date"
+                          value={sig.date}
+                          onChange={(e) => {
+                            const newSignatures = [...reportFormData.signatures];
+                            newSignatures[index].date = e.target.value;
+                            setReportFormData({ ...reportFormData, signatures: newSignatures });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={sig.function}
+                          onChange={(e) => {
+                            const newSignatures = [...reportFormData.signatures];
+                            newSignatures[index].function = e.target.value;
+                            setReportFormData({ ...reportFormData, signatures: newSignatures });
+                          }}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          placeholder="Fonction"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Notes</label>

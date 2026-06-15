@@ -21,7 +21,7 @@ export async function POST(request) {
 
     console.log("Setting HTML content");
     // Set content and generate PDF
-    await page.setContent(html, { waitUntil: 'networkidle' });
+    await page.setContent(html, { waitUntil: 'networkidle0' });
     console.log("Generating PDF");
     const pdf = await page.pdf({
       format: 'A4',

@@ -1,40 +1,19 @@
 "use client";
 
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useAsyncError,
-  useLocation,
-  useRouteError,
-} from 'react-router';
-
+import {Links,Meta,Outlet,Scripts,ScrollRestoration,useAsyncError,useLocation,useRouteError} from 'react-router';
 import { useButton } from '@react-aria/button';
-import {
-  type CSSProperties,
-  Component,
-  type FC,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import {type CSSProperties,Component,type FC,type ReactNode,useCallback,useEffect,useRef,useState} from 'react';
 import './global.css';
-
 import { LoadFonts } from 'virtual:load-fonts.jsx';
-import fetch from '@/__create/fetch';
 import { toPng } from 'html-to-image';
 import { useNavigate } from 'react-router';
 import { serializeError } from 'serialize-error';
 import { Toaster, toast } from 'sonner';
-import { useDevServerHeartbeat } from '../__create/useDevServerHeartbeat';
 import type { Route } from './+types/root';
 import { AppProvider } from '@/contexts/AppContext';
-
-export const links = () => [];
+export const links = () => [
+  { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+];
 
 if (globalThis.window && globalThis.window !== undefined) {
   globalThis.window.fetch = fetch;
@@ -404,7 +383,6 @@ export const useHandleScreenshotRequest = () => {
 export function Layout({ children }: { children: ReactNode }) {
   useHandshakeParent();
   useHandleScreenshotRequest();
-  useDevServerHeartbeat();
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location?.pathname;
@@ -440,7 +418,8 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        <script type="module" src="/src/__create/dev-error-overlay.js"></script>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        {/* Dev error overlay removed after folder deletion */}
         {LoadFontsSSR ? <LoadFontsSSR /> : null}
       </head>
       <body>

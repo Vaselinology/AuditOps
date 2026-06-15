@@ -27,11 +27,11 @@ export function IssueDetail({
   reportHtml,
 }) {
   const tabs = [
-    { id: "details", label: "Détails" },
-    { id: "risk", label: "Risque initial" },
-    { id: "followup", label: "Suivi" },
+    { id: "details", label: t("admin.issues.details") },
+    { id: "risk", label: t("admin.issues.risk") },
+    { id: "followup", label: t("admin.issues.followup") },
     { id: "manage", label: t("admin.issues.update") },
-    { id: "report", label: "Rapport" },
+    { id: "report", label: t("admin.issues.report") },
   ];
 
   if (!selectedIssue) {

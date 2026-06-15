@@ -4,9 +4,7 @@
 		"**/.server/**/*",
 		"**/.client/**/*",
 		".react-router/types/**/*",
-		"./src/global.d.ts",
-		"./src/__create/**/*.ts",
-		"./__create/**/*.ts"
+		"./src/global.d.ts"
 	],
 	"compilerOptions": {
 		"lib": ["DOM", "DOM.Iterable", "ES2022"],
