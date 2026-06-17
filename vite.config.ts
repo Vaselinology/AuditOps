@@ -16,6 +16,20 @@ import { restartEnvFileChange } from './plugins/restartEnvFileChange';
 export default defineConfig({
   // Keep them available via import.meta.env.NEXT_PUBLIC_*
   envPrefix: 'NEXT_PUBLIC_',
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router', 'react-router-dom'],
+          'ui-vendor': ['@chakra-ui/react', '@emotion/react', '@emotion/styled'],
+          'charts-vendor': ['recharts'],
+          'utils-vendor': ['date-fns', 'lodash-es', 'classnames'],
+        },
+      },
+    },
+  },
   optimizeDeps: {
     // Explicitly include fast-glob, since it gets dynamically imported and we
     // don't want that to cause a re-bundle.
