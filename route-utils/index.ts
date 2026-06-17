@@ -90,7 +90,7 @@ app.all('/integrations/:path{.+}', async (c, next) => {
 
 app.route(API_BASENAME, api);
 
-export default await createHonoServer({
+export default createHonoServer({
   app,
   defaultLogger: false,
 });

@@ -86,7 +86,8 @@ async function registerRoutes() {
             const honoPath = `/${parts.map(({ pattern }) => pattern).join('/')}`;
             const handler: Handler = async (c) => {
               const params = c.req.param();
-              if (import.meta.env.DEV) {
+              // @ts-ignore - Vite-specific import
+              if (import.meta.env?.DEV) {
                 const updatedRoute = await import(
                   /* @vite-ignore */ `${routeFile}?update=${Date.now()}`
                 );
@@ -130,15 +131,21 @@ async function registerRoutes() {
 }
 
 // Initial route registration
-await registerRoutes();
+registerRoutes().catch((err) => {
+  console.error('Error registering routes:', err);
+});
 
 // Hot reload routes in development
-if (import.meta.env.DEV) {
-  import.meta.glob('../src/app/api/**/route.js', {
+// @ts-ignore - Vite-specific import
+if (import.meta.env?.DEV) {
+  // @ts-ignore - Vite-specific import
+  import.meta.glob?.('../src/app/api/**/route.js', {
     eager: true,
   });
+  // @ts-ignore - Vite-specific import
   if (import.meta.hot) {
-    import.meta.hot.accept((newSelf) => {
+    // @ts-ignore - Vite-specific import
+    import.meta.hot.accept(() => {
       registerRoutes().catch((err) => {
         console.error('Error reloading routes:', err);
       });
